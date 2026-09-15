@@ -31,7 +31,7 @@ ACCENT = "#c8703a"
 
 
 class SetupWindow:
-    def __init__(self, root: tk.Tk, manifest: dict, logger):
+    def __init__(self, root: tk.Tk, manifest: dict, logger, cache: str | None = None):
         self.root = root
         self.manifest = manifest
         self.log_fn = logger
@@ -39,6 +39,9 @@ class SetupWindow:
         self.preflight: dict | None = None
         self.worker: threading.Thread | None = None
         self.busy = False
+        # --cache lets the host point setup at payloads it already has staged
+        # instead of re-downloading 1.4 GB. Friends never pass it.
+        self.cache_override = Path(cache) if cache else None
 
         pack = manifest["pack"]
         server = manifest["server"]
@@ -259,6 +262,9 @@ class SetupWindow:
 
     def cache_dir(self) -> Path:
         import os
+        if self.cache_override is not None:
+            self.cache_override.mkdir(parents=True, exist_ok=True)
+            return self.cache_override
         base = Path(os.environ.get("LOCALAPPDATA") or Path.home())
         cache = base / "DojoSetup" / "cache"
         cache.mkdir(parents=True, exist_ok=True)
@@ -374,7 +380,7 @@ def main(args, *, load_manifest, Logger) -> int:
     logger = Tee()
     manifest = load_manifest(args.manifest, logger)
 
-    window = SetupWindow(root, manifest, logger)
+    window = SetupWindow(root, manifest, logger, cache=getattr(args, "cache", None))
 
     # Route every log line into the window too.
     original = logger.__call__
