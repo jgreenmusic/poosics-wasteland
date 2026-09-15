@@ -1,0 +1,186 @@
+{
+  "schema": 1,
+  "id": "ttw",
+  "_comment": "SINGLE SOURCE OF TRUTH for the friend-facing TTW client package. Every version and hash here was verified against the host's own staged files on 2026-09-15. Do not bump a version without re-hashing: NV:MP kicks any player whose ESM/ESP set does not match the host byte-for-byte, so version drift between host and friend is a hard failure, not a cosmetic one.",
+
+  "pack": {
+    "name": "Poosic's Wasteland",
+    "version": "1.0.0",
+    "generated": "2026-09-15",
+    "packNote": "Tale of Two Wastelands 3.4 + YUPTTW + NV:MP co-op client."
+  },
+
+  "server": {
+    "name": "Poosic's Wasteland",
+    "host": "69.9.134.164",
+    "port": 27015,
+    "protocol": "udp+tcp",
+    "hostNote": "Albert's public IP. It is a DHCP lease and CAN change on a fiber re-lease. The installer always reads this value from the published manifest at run time, never from a value compiled into the exe, so a re-lease is fixed by re-publishing this file - friends do not reinstall.",
+    "serverBinary": "nvmp_storyserver.exe",
+    "serverBinaryNote": "NV:MP co-op is PEER-HOSTED: the server exe runs from inside the host's own Fallout New Vegas folder, alongside the exact same mods. It is not a standalone dedicated server."
+  },
+
+  "prereqs": {
+    "diskFreeGB": 45,
+    "diskFreeNote": "TTW's installer needs room for the FO3 asset conversion plus the ~5.2 GB output. 45 GB is the measured-safe floor, not a guess.",
+    "refuseProgramFiles": true,
+    "refuseProgramFilesNote": "MO2's virtual filesystem and xNVSE both break under the UAC-protected Program Files tree. If either game lives there the installer stops and tells the player how to move it, because the failure mode otherwise appears hours later as a silent crash.",
+    "steamApps": [
+      {
+        "role": "fo3",
+        "appid": 22370,
+        "altAppids": [22300],
+        "name": "Fallout 3 - Game of the Year Edition",
+        "installdirHint": "Fallout 3 goty",
+        "requiredFiles": [
+          "Data/Fallout3.esm",
+          "Data/Anchorage.esm",
+          "Data/ThePitt.esm",
+          "Data/BrokenSteel.esm",
+          "Data/PointLookout.esm",
+          "Data/Zeta.esm"
+        ],
+        "requiredFilesNote": "All five FO3 DLC are MANDATORY - TTW is built against every one of them and the installer aborts partway through without them. appid 22300 is plain Fallout 3; it only qualifies if the player bought the DLC separately, so the DLC file check is what actually decides, not the appid.",
+        "verifiedOnHost": "G:/SteamLibrary/steamapps/common/Fallout 3 goty"
+      },
+      {
+        "role": "fnv",
+        "appid": 22380,
+        "altAppids": [],
+        "name": "Fallout: New Vegas",
+        "installdirHint": "Fallout New Vegas",
+        "requiredFiles": [
+          "Data/FalloutNV.esm",
+          "Data/DeadMoney.esm",
+          "Data/HonestHearts.esm",
+          "Data/OldWorldBlues.esm",
+          "Data/LonesomeRoad.esm",
+          "Data/GunRunnersArsenal.esm",
+          "Data/ClassicPack.esm",
+          "Data/MercenaryPack.esm",
+          "Data/TribalPack.esm",
+          "Data/CaravanPack.esm"
+        ],
+        "requiredFilesNote": "All four story DLC, GRA, and the four pre-order packs. TTW's load order expects every one of them present and in this order.",
+        "verifiedOnHost": "G:/SteamLibrary/steamapps/common/Fallout New Vegas"
+      }
+    ]
+  },
+
+  "components": [
+    {
+      "id": "xnvse",
+      "name": "xNVSE",
+      "version": "6.4.8",
+      "fetch": "auto",
+      "url": "https://github.com/xNVSE/NVSE/releases/download/6.4.8/nvse_6_4_8.7z",
+      "filename": "nvse_6_4_8.7z",
+      "size": 5648605,
+      "sha256": "80608d0fd437b56d2670ce47ecc749e6dcd8b69db263a2e6c2de5095b1a42534",
+      "archive": "7z",
+      "install": "fnv_root",
+      "stripTopLevel": "nvse_6_4_8",
+      "verify": ["nvse_loader.exe", "nvse_1_4.dll", "nvse_steam_loader.dll"],
+      "note": "Script extender. Goes loose in the FNV root, NOT through MO2. Verified: the GitHub asset is 5,648,605 bytes, byte-identical in size to the host's staged copy."
+    },
+    {
+      "id": "mo2",
+      "name": "Mod Organizer 2",
+      "version": "2.5.2",
+      "required": false,
+      "skipByDefault": true,
+      "fetch": "auto",
+      "url": "https://github.com/ModOrganizer2/modorganizer/releases/download/v2.5.2/Mod.Organizer-2.5.2.7z",
+      "filename": "Mod.Organizer-2.5.2.7z",
+      "size": 149660212,
+      "sha256": "e6376efd87fd5ddd95aee959405e8f067afa526ea6c2c0c5aa03c5108bf4a815",
+      "archive": "7z",
+      "install": "optional_tool",
+      "verify": ["ModOrganizer.exe"],
+      "note": "OPTIONAL AND OFF BY DEFAULT - deliberately not on the install path. NV:MP launches its own process and therefore cannot see Mod Organizer's virtual filesystem, so mods staged behind the VFS are invisible to it and produce exactly the 'Invalid mod revisions' kick this pack exists to prevent. NV:MP's own README is explicit that the server 'must be ran alongside your current Fallout installation'. This pack installs straight into the real Data folder so the host and every friend are structurally identical. Kept here only for players who separately want MO2 for single-player modding. Verified: GitHub asset size 149,660,212 matches the host's staged copy exactly."
+    },
+    {
+      "id": "ttw",
+      "name": "Tale of Two Wastelands",
+      "version": "3.4.0",
+      "build": "2026.06.11",
+      "fetch": "manual",
+      "pageUrl": "https://mod.pub/ttw/133/files",
+      "homeUrl": "https://taleoftwowastelands.com",
+      "filename": "TTW_3.4.0_2026.06.11.7z",
+      "size": 1284053158,
+      "sha256": "86c540987beb1175a163d81ef1feb67085a59ac5e119999cf2b970865c890cd6",
+      "archive": "7z",
+      "install": "ttw_installer",
+      "installTarget": "fnv_data",
+      "fetchNote": "MANUAL ON PURPOSE - this is a legal constraint, not a technical one. Bethesda asked mod sites not to host TTW and required the custom installer specifically so Fallout 3's assets are never redistributed; TTW is therefore published only from its own site and ModPub. This package NEVER mirrors it. The installer opens the official page, waits for the player's own download, then verifies the SHA-256 above so a truncated or wrong-version file is caught before it wastes an hour.",
+      "installerNote": "The TTW installer is a Delphi GUI whose ONLY command-line switch is -NoOggEnc2. There is no silent or unattended mode, so this one step is necessarily player-driven; the installer pre-validates both game paths and shows the exact values to enter, then verifies the output."
+    },
+    {
+      "id": "ttw_ogg",
+      "name": "TTW OGG Vorbis libraries",
+      "version": "2026.06.13",
+      "fetch": "manual",
+      "pageUrl": "https://mod.pub/ttw/133/files",
+      "filename": "TTW_OGG_Vorbis_2026.06.13.7z",
+      "size": 166163,
+      "sha256": "d4c4b2702d849a335d61bd8fc19179d72d54c88b603b41410c099b6b4ccd9986",
+      "archive": "7z",
+      "install": "fnv_root",
+      "verify": ["libvorbis.dll", "libvorbisfile.dll", "ogg.dll"],
+      "note": "Three DLLs that replace FNV's stock Vorbis libs in the game root. Needed for TTW's converted audio; without them FO3-side dialogue is silent."
+    },
+    {
+      "id": "yupttw",
+      "name": "YUP - TTW patch",
+      "version": "13.9.1",
+      "build": "2026.05.09",
+      "fetch": "manual",
+      "pageUrl": "https://mod.pub/ttw/133/files",
+      "filename": "YUPTTW_13.9.1_2026.05.09.7z",
+      "size": 29185420,
+      "sha256": "c9275a192e1fc1ccd498148c4e99e28a6802b8d5b9d5b34597243ee4892e46d3",
+      "archive": "7z",
+      "install": "fnv_data",
+      "verify": ["YUPTTW.esm", "YUPTTW - Main.bsa", "YUPTTW - Sounds.bsa"],
+      "note": "Ships YUPTTW.esm plus Main/Sounds BSAs and their .override markers. Extracted straight into the Fallout New Vegas Data folder, on top of the TTW output, so NV:MP sees it in the real game folder rather than behind a mod manager."
+    },
+    {
+      "id": "nvmp",
+      "name": "NV:MP co-op client",
+      "version": "9.0",
+      "fetch": "manual",
+      "pageUrl": "https://nv-mp.com",
+      "wikiUrl": "https://wiki.nv-mp.com/en/sever-hosting/setting-up-coop",
+      "filename": "build_release_client.zip",
+      "size": 94878942,
+      "sha256": "c0970a240d96ef1a50a1003cc002aa1a4b14a6da30cc26c5c744ce516c122880",
+      "archive": "zip",
+      "install": "fnv_root",
+      "verify": ["nvmp_launcher.exe", "nvmp_start.exe", "nvmp/client.dll"],
+      "note": "Version string from the archive's own .nvmp_version file: 9.0. Bundles its own vc_redist.x86.exe at nvmp/res/redist/, so the VC++ runtime is handled without a separate dependency. Also contains nvmp_storyserver.exe, which only the HOST runs.",
+      "vcRedist": "nvmp/res/redist/vc_redist.x86.exe"
+    }
+  ],
+
+  "loadOrder": [
+    "FalloutNV.esm",
+    "DeadMoney.esm",
+    "HonestHearts.esm",
+    "OldWorldBlues.esm",
+    "LonesomeRoad.esm",
+    "GunRunnersArsenal.esm",
+    "ClassicPack.esm",
+    "MercenaryPack.esm",
+    "TribalPack.esm",
+    "CaravanPack.esm",
+    "TaleOfTwoWastelands.esm",
+    "YUPTTW.esm"
+  ],
+  "loadOrderNote": "This is the parity contract. NV:MP compares the active plugin set against the host and kicks on any mismatch with 'Invalid mod revisions', so this list is exact and ordered - not a suggestion. It matches the host's verified install at G:/FalloutGames/TTW.",
+
+  "parity": {
+    "esmSource": "built-locally",
+    "esmSourceNote": "TaleOfTwoWastelands.esm is BUILT on each player's machine from their own Fallout 3 files - it is never shipped. Parity therefore depends entirely on every player feeding the installer the SAME pinned inputs: TTW 3.4.0 build 2026.06.11 and YUPTTW 13.9.1. Identical inputs produce an identical ESM, which is what satisfies NV:MP. This is the whole reason the hashes above are pinned rather than 'latest'."
+  }
+}

@@ -1,0 +1,17 @@
+# Build output
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+
+# Never commit game content or payloads. TTW and Bethesda assets must not be
+# redistributed, and the other archives are fetched from their official homes
+# at run time rather than mirrored here.
+*.7z
+*.zip
+*.mpi
+*.bsa
+*.esm
+*.esp
+cache/
