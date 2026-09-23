@@ -5,6 +5,8 @@ Tale of Two Wastelands + NV:MP co-op, set up for you.
 **[⬇ Download the setup tool](../../releases/latest)** — one file, ~16 MB. Run it. That's it.
 
 You do **not** need Python, 7-Zip, Visual C++, or any other tool installed first.
+(7-Zip is built into the setup tool. It's LGPL-licensed, and its license ships
+inside the exe.)
 
 ---
 
@@ -52,16 +54,35 @@ Bethesda asked mod sites not to host TTW and required that it ship as an
 installer that builds from *your own* Fallout 3 files, so that Fallout 3's assets
 are never redistributed. Nobody is allowed to mirror it, this pack included.
 
-So setup will:
+**Download these three files** from the Files tab of
+**<https://mod.pub/ttw/133/files>**. Take
+exactly these versions. Setup checks each file's fingerprint and won't accept
+a different one:
 
-- open the official download page for you,
-- wait while you download the files (anywhere — your Downloads folder is fine),
-- **verify each one is the exact version this pack pins**, then
-- launch the TTW installer and show you the exact three paths to paste in.
+| File | What it is |
+|---|---|
+| `TTW_3.4.0_2026.06.11.7z` (~1.2 GB) | Tale of Two Wastelands 3.4 |
+| `YUPTTW_13.9.1_2026.05.09.7z` | the YUP bug-fix patch for TTW |
+| `TTW_OGG_Vorbis_2026.06.13.7z` | audio libraries TTW needs |
+
+Save them anywhere: your Downloads folder, Desktop or Documents all work. mod.pub
+sometimes adds `[mod.pub]` to the filename. That's fine, setup still finds them.
+
+Then setup will:
+
+- **verify each one is the exact version this pack pins**,
+- launch the TTW installer. **Windows asks for admin permission; click Yes.**
+  The TTW installer requires it.
+- show you the exact three paths to paste in. The destination is a new empty
+  `TTW_output` folder next to your game, **not** the game's `Data` folder. Setup
+  moves the result into `Data` itself once it has checked the build.
+- **wait until you close the TTW window**, then check the build is complete and
+  identical to the host's before carrying on.
 
 The TTW installer itself has no silent mode — it's a GUI with exactly one
 command-line switch — so this step needs a human. It runs 30–90 minutes.
-Everything before and after it is automatic.
+Everything before and after it is automatic. If you close it early, run setup
+again. It sets the partial build aside and starts fresh.
 
 ---
 
@@ -76,16 +97,25 @@ your own game files; it's never shipped. Identical inputs produce an identical
 file, which is what lets you join. Feed it a different TTW version and you get a
 different `.esm` and a failed handshake.
 
+After the build, setup compares your `TaleOfTwoWastelands.esm` and `YUPTTW.esm`
+against the host's fingerprints. A mismatch shows up **during setup**, with a
+clear message, instead of as a kick when you try to join.
+
+In New Vegas the load order is set by the plugins' **file dates**, not by
+`plugins.txt`, so setup stamps those dates too.
+
 The plugin order is the contract:
 
 ```
-FalloutNV.esm          ClassicPack.esm
-DeadMoney.esm          MercenaryPack.esm
-HonestHearts.esm       TribalPack.esm
-OldWorldBlues.esm      CaravanPack.esm
-LonesomeRoad.esm       TaleOfTwoWastelands.esm
-GunRunnersArsenal.esm  YUPTTW.esm
+FalloutNV.esm          Fallout3.esm        ClassicPack.esm
+DeadMoney.esm          Anchorage.esm       MercenaryPack.esm
+HonestHearts.esm       ThePitt.esm         TribalPack.esm
+OldWorldBlues.esm      BrokenSteel.esm     CaravanPack.esm
+LonesomeRoad.esm       PointLookout.esm    TaleOfTwoWastelands.esm
+GunRunnersArsenal.esm  Zeta.esm            YUPTTW.esm
 ```
+(Read down each column.) The six Fallout 3 plugins in the middle are required
+by TTW itself. Without them it doesn't load at all.
 
 **Don't add other mods.** Any plugin the host doesn't have will get you kicked.
 

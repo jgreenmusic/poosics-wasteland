@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Callable
 
 CHUNK = 1 << 20  # 1 MiB
-USER_AGENT = "DojoSetup/1.0 (+https://github.com/jgreenmusic)"
+USER_AGENT = "DojoSetup/1.1 (+https://github.com/jgreenmusic)"
 
 ProgressFn = Callable[[int, int], None]
 

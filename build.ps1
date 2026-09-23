@@ -24,6 +24,14 @@ if ($Clean) {
     }
 }
 
+# 7-Zip is bundled because py7zr cannot decode the BCJ2 filter that the TTW and
+# TTW OGG archives use (it fails partway and leaves zero-byte files). 7-Zip is
+# LGPL; its License.txt ships next to it inside the exe.
+$sevenZip = Join-Path $env:ProgramFiles '7-Zip'
+foreach ($f in '7z.exe', '7z.dll', 'License.txt') {
+    if (-not (Test-Path (Join-Path $sevenZip $f))) { throw "7-Zip file missing: $sevenZip\$f - install 7-Zip x64 first" }
+}
+
 Write-Host 'Building ' -NoNewline
 Write-Host $Name -ForegroundColor Cyan
 
@@ -34,6 +42,9 @@ python -m PyInstaller `
     --name $Name `
     --paths 'src' `
     --add-data 'manifest/ttw.json;manifest' `
+    --add-binary "$sevenZip\7z.exe;tools" `
+    --add-binary "$sevenZip\7z.dll;tools" `
+    --add-data "$sevenZip\License.txt;tools" `
     --hidden-import 'py7zr' `
     --collect-submodules 'py7zr' `
     'src/dojo_setup.py'

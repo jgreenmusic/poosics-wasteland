@@ -2,14 +2,12 @@
   "schema": 1,
   "id": "ttw",
   "_comment": "SINGLE SOURCE OF TRUTH for the friend-facing TTW client package. Every version and hash here was verified against the host's own staged files on 2026-09-15. Do not bump a version without re-hashing: NV:MP kicks any player whose ESM/ESP set does not match the host byte-for-byte, so version drift between host and friend is a hard failure, not a cosmetic one.",
-
   "pack": {
     "name": "Poosic's Wasteland",
-    "version": "1.0.0",
-    "generated": "2026-09-15",
+    "version": "1.1.0",
+    "generated": "2026-09-23",
     "packNote": "Tale of Two Wastelands 3.4 + YUPTTW + NV:MP co-op client."
   },
-
   "server": {
     "name": "Poosic's Wasteland",
     "host": "69.9.134.164",
@@ -19,17 +17,18 @@
     "serverBinary": "nvmp_storyserver.exe",
     "serverBinaryNote": "NV:MP co-op is PEER-HOSTED: the server exe runs from inside the host's own Fallout New Vegas folder, alongside the exact same mods. It is not a standalone dedicated server."
   },
-
   "prereqs": {
     "diskFreeGB": 45,
-    "diskFreeNote": "TTW's installer needs room for the FO3 asset conversion plus the ~5.2 GB output. 45 GB is the measured-safe floor, not a guess.",
+    "diskFreeNote": "TTW's own installer asks for 17 GB free at its destination; on the host, the files written by today's build (modified in the 3 hours before the check, not the TTW folder total) came to 16.1 GB. 45 GB leaves room for the 1.2 GB download, the extracted installer and the build.",
     "refuseProgramFiles": true,
     "refuseProgramFilesNote": "MO2's virtual filesystem and xNVSE both break under the UAC-protected Program Files tree. If either game lives there the installer stops and tells the player how to move it, because the failure mode otherwise appears hours later as a silent crash.",
     "steamApps": [
       {
         "role": "fo3",
         "appid": 22370,
-        "altAppids": [22300],
+        "altAppids": [
+          22300
+        ],
         "name": "Fallout 3 - Game of the Year Edition",
         "installdirHint": "Fallout 3 goty",
         "requiredFiles": [
@@ -66,7 +65,6 @@
       }
     ]
   },
-
   "components": [
     {
       "id": "xnvse",
@@ -80,7 +78,11 @@
       "archive": "7z",
       "install": "fnv_root",
       "stripTopLevel": "nvse_6_4_8",
-      "verify": ["nvse_loader.exe", "nvse_1_4.dll", "nvse_steam_loader.dll"],
+      "verify": [
+        "nvse_loader.exe",
+        "nvse_1_4.dll",
+        "nvse_steam_loader.dll"
+      ],
       "note": "Script extender. Goes loose in the FNV root, NOT through MO2. Verified: the GitHub asset is 5,648,605 bytes, byte-identical in size to the host's staged copy."
     },
     {
@@ -96,7 +98,9 @@
       "sha256": "e6376efd87fd5ddd95aee959405e8f067afa526ea6c2c0c5aa03c5108bf4a815",
       "archive": "7z",
       "install": "optional_tool",
-      "verify": ["ModOrganizer.exe"],
+      "verify": [
+        "ModOrganizer.exe"
+      ],
       "note": "OPTIONAL AND OFF BY DEFAULT - deliberately not on the install path. NV:MP launches its own process and therefore cannot see Mod Organizer's virtual filesystem, so mods staged behind the VFS are invisible to it and produce exactly the 'Invalid mod revisions' kick this pack exists to prevent. NV:MP's own README is explicit that the server 'must be ran alongside your current Fallout installation'. This pack installs straight into the real Data folder so the host and every friend are structurally identical. Kept here only for players who separately want MO2 for single-player modding. Verified: GitHub asset size 149,660,212 matches the host's staged copy exactly."
     },
     {
@@ -127,7 +131,11 @@
       "sha256": "d4c4b2702d849a335d61bd8fc19179d72d54c88b603b41410c099b6b4ccd9986",
       "archive": "7z",
       "install": "fnv_root",
-      "verify": ["libvorbis.dll", "libvorbisfile.dll", "ogg.dll"],
+      "verify": [
+        "libvorbis.dll",
+        "libvorbisfile.dll",
+        "ogg.dll"
+      ],
       "note": "Three DLLs that replace FNV's stock Vorbis libs in the game root. Needed for TTW's converted audio; without them FO3-side dialogue is silent."
     },
     {
@@ -142,7 +150,11 @@
       "sha256": "c9275a192e1fc1ccd498148c4e99e28a6802b8d5b9d5b34597243ee4892e46d3",
       "archive": "7z",
       "install": "fnv_data",
-      "verify": ["YUPTTW.esm", "YUPTTW - Main.bsa", "YUPTTW - Sounds.bsa"],
+      "verify": [
+        "YUPTTW.esm",
+        "YUPTTW - Main.bsa",
+        "YUPTTW - Sounds.bsa"
+      ],
       "note": "Ships YUPTTW.esm plus Main/Sounds BSAs and their .override markers. Extracted straight into the Fallout New Vegas Data folder, on top of the TTW output, so NV:MP sees it in the real game folder rather than behind a mod manager."
     },
     {
@@ -157,12 +169,15 @@
       "sha256": "c0970a240d96ef1a50a1003cc002aa1a4b14a6da30cc26c5c744ce516c122880",
       "archive": "zip",
       "install": "fnv_root",
-      "verify": ["nvmp_launcher.exe", "nvmp_start.exe", "nvmp/client.dll"],
+      "verify": [
+        "nvmp_launcher.exe",
+        "nvmp_start.exe",
+        "nvmp/client.dll"
+      ],
       "note": "Version string from the archive's own .nvmp_version file: 9.0. Bundles its own vc_redist.x86.exe at nvmp/res/redist/, so the VC++ runtime is handled without a separate dependency. Also contains nvmp_storyserver.exe, which only the HOST runs.",
       "vcRedist": "nvmp/res/redist/vc_redist.x86.exe"
     }
   ],
-
   "loadOrder": [
     "FalloutNV.esm",
     "DeadMoney.esm",
@@ -170,6 +185,12 @@
     "OldWorldBlues.esm",
     "LonesomeRoad.esm",
     "GunRunnersArsenal.esm",
+    "Fallout3.esm",
+    "Anchorage.esm",
+    "ThePitt.esm",
+    "BrokenSteel.esm",
+    "PointLookout.esm",
+    "Zeta.esm",
     "ClassicPack.esm",
     "MercenaryPack.esm",
     "TribalPack.esm",
@@ -177,10 +198,42 @@
     "TaleOfTwoWastelands.esm",
     "YUPTTW.esm"
   ],
-  "loadOrderNote": "This is the parity contract. NV:MP compares the active plugin set against the host and kicks on any mismatch with 'Invalid mod revisions', so this list is exact and ordered - not a suggestion. It matches the host's verified install at G:/FalloutGames/TTW.",
-
+  "loadOrderNote": "This is the parity contract: NV:MP kicks any player whose active plugins differ from the host ('Invalid mod revisions'). 18 plugins. The six Fallout 3 plugins (Fallout3 ... Zeta) are HARD MASTERS of TaleOfTwoWastelands.esm - read from its own TES4 header on 2026-09-23 - so they must be active and must sit after the NV DLC and before TTW; v1.0.0 omitted them, which would have failed to load. The four pre-order packs are not TTW masters, so their slot is a choice; it only has to be the same for everyone. In New Vegas the ORDER comes from the plugin files' timestamps, which setup stamps to match this list.",
   "parity": {
     "esmSource": "built-locally",
     "esmSourceNote": "TaleOfTwoWastelands.esm is BUILT on each player's machine from their own Fallout 3 files - it is never shipped. Parity therefore depends entirely on every player feeding the installer the SAME pinned inputs: TTW 3.4.0 build 2026.06.11 and YUPTTW 13.9.1. Identical inputs produce an identical ESM, which is what satisfies NV:MP. This is the whole reason the hashes above are pinned rather than 'latest'."
+  },
+  "ttwOutput": {
+    "_comment": "Recorded from the host's clean TTW 3.4 build (-NoOggEnc2) on 2026-09-23. sha256 = the parity check: those plugins must be byte-identical to the host's or NV:MP kicks the player. Verified deterministic - two separate builds on the host (2026-09-06 and 2026-09-23) produced identical hashes for all seven built plugins. YUPTTW.esm is the pinned 13.9.1 file, which setup lays over the older copy TTW bundles. files = host BSA sizes, used only as a completeness floor (a build must reach 95% of each): the host's first build stopped with TaleOfTwoWastelands - Main.bsa at 1.2 MB of 1,065 MB, and a floor catches that without failing a friend over a small legitimate size difference.",
+    "minSizeRatio": 0.95,
+    "sha256": {
+      "Fallout3.esm": "abba58ca6914a88ebf4335e2275b98cacafeab532d4fa267203c85942af064dd",
+      "Anchorage.esm": "a45cdb66d4359d885914dcb7a502733d7edbaac464fb5a0c119093ee99af639e",
+      "ThePitt.esm": "e2baaa1fa0f9f3db2af46cd5017baee3785b096d93dd1d3201d88182d6889d4e",
+      "BrokenSteel.esm": "30e987dc941727509b723ef8b60a8ee6d1784c14449e984c281397f4e8a94197",
+      "PointLookout.esm": "c27a7530cd80aa2adf1c1c7cd91bc45830b235ead569af0061cc41ec7fff4c7a",
+      "Zeta.esm": "fc06cd00283bbb0f5978ef6c7aa0d9219b8777a6894f22dc2d51e741ad57e183",
+      "TaleOfTwoWastelands.esm": "36d1504a33617d12acf0f423b9bda92b627c4e3fd0bcb193c8866dbea55ee9d4",
+      "YUPTTW.esm": "193c06507961e318f7855d81630ba163077e34bf24d98bb05e371ab76cc5bb28"
+    },
+    "files": {
+      "Anchorage - Main.bsa": 259700324,
+      "Anchorage - Sounds.bsa": 34589085,
+      "BrokenSteel - Main.bsa": 389214931,
+      "BrokenSteel - Sounds.bsa": 33910083,
+      "Fallout3 - MenuVoices.bsa": 1070646795,
+      "Fallout3 - Meshes.bsa": 759084160,
+      "Fallout3 - Sound.bsa": 478226824,
+      "Fallout3 - Textures.bsa": 507458963,
+      "Fallout3 - Voices.bsa": 768456095,
+      "PointLookout - Main.bsa": 392028667,
+      "PointLookout - Sounds.bsa": 33047850,
+      "TaleOfTwoWastelands - Main.bsa": 1116645516,
+      "TaleOfTwoWastelands - Textures.bsa": 1704285637,
+      "ThePitt - Main.bsa": 464243631,
+      "ThePitt - Sounds.bsa": 24537930,
+      "Zeta - Main.bsa": 282779903,
+      "Zeta - Sounds.bsa": 53755262
+    }
   }
 }

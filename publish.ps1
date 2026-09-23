@@ -11,7 +11,8 @@
 
 param(
     [string]$Repo    = 'jgreenmusic/poosics-wasteland',
-    [string]$Tag     = 'v1.0.0',
+    [string]$Tag     = 'v1.1.0',
+    [Parameter(Mandatory)][string]$Message,   # commit message - no Co-Authored-By trailer (Julian's rule)
     [string]$Name    = 'Poosics-Wasteland-Setup',
     [switch]$SkipRelease
 )
@@ -34,25 +35,7 @@ git add -A
 git diff --cached --quiet
 $hasChanges = ($LASTEXITCODE -ne 0)
 if ($hasChanges) {
-    git commit -q -m @'
-Dojo Setup: one-download TTW + NV:MP client installer
-
-Single-file Windows installer so players can join without assembling the
-mod stack by hand. Registry-style manifest pins every version and SHA-256,
-because NV:MP kicks any player whose plugin set differs from the host.
-
-TTW itself is never mirrored - Bethesda required it to ship as an installer
-that builds from each player's own Fallout 3 files, so setup opens the
-official page, verifies the download against a pinned hash, and drives the
-installer from there.
-
-Installs directly into the real Fallout New Vegas folder rather than through
-Mod Organizer: NV:MP launches its own process and cannot see MO2's virtual
-filesystem, which is a direct cause of "Invalid mod revisions".
-
-Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_016ivBuyu2bThmgba3XrVtiv
-'@
+    git commit -q -m $Message
     Write-Host 'Committed' -ForegroundColor Green
 } else {
     Write-Host 'Nothing new to commit' -ForegroundColor DarkGray
