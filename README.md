@@ -126,6 +126,14 @@ by TTW itself. Without them it doesn't load at all.
 Run **Join Poosics Wasteland** from your Desktop, pick **Connect via IP**, and
 enter the address setup printed at the end.
 
+The first time, the NV:MP launcher shows its Terms of Service. If a "Script
+Error" box pops up over it, click **Yes** (or **No** if it keeps appearing).
+It's the launcher's old built-in browser, and harmless. The launcher may then
+download an update and close. Just run the shortcut again.
+
+**You don't need an NV:MP account.** If it asks you to log in, choose **Launch in
+offline mode**. NV:MP's own guide says login isn't required for co-op.
+
 The server only accepts players while the host has it running, and the address
 can change — setup always reads it live from this repo rather than from a value
 baked into the download, so a change of address never means reinstalling.

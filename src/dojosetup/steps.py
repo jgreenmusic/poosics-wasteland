@@ -101,6 +101,13 @@ def install_fnv_root(ctx: Context, component: dict, payload: Path) -> None:
             f"missing: {', '.join(missing)}"
         )
 
+    # NV:MP's launcher self-updates the client and rewrites .nvmp_version, but
+    # never touches nvmp_storyserver.exe (whose own version info just says
+    # 1.0.0.0). This marker records what version the server files really are.
+    marker = component.get("versionMarker")
+    if marker:
+        (target / marker).write_text(component["version"] + "\n", encoding="ascii")
+
 
 def install_fnv_data(ctx: Context, component: dict, payload: Path) -> None:
     """Extract into Data/ (YUPTTW)."""
