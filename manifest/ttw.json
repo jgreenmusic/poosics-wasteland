@@ -4,7 +4,7 @@
   "_comment": "SINGLE SOURCE OF TRUTH for the friend-facing TTW client package. Every version and hash here was verified against the host's own staged files on 2026-09-15. Do not bump a version without re-hashing: NV:MP kicks any player whose ESM/ESP set does not match the host byte-for-byte, so version drift between host and friend is a hard failure, not a cosmetic one.",
   "pack": {
     "name": "Poosic's Wasteland",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "generated": "2026-09-23",
     "packNote": "Tale of Two Wastelands 3.4 + YUPTTW + NV:MP co-op client."
   },

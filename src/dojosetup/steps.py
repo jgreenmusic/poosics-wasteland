@@ -494,7 +494,9 @@ def write_launcher(ctx: Context) -> Path:
     launcher.write_text(
         "@echo off\r\n"
         f"title {server['name']}\r\n"
-        "cd /d \"%~dp0\"\r\n"
+        # The game folder by full path, NOT %~dp0: the Desktop copy of this
+        # file would otherwise look for nvmp_launcher.exe on the Desktop.
+        f"cd /d \"{ctx.fnv}\"\r\n"
         "echo Starting NV:MP...\r\n"
         f"echo Server: {host}:{port}\r\n"
         "echo.\r\n"
