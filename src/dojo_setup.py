@@ -26,7 +26,7 @@ from pathlib import Path
 if __package__ in (None, ""):  # running as a script or frozen exe
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from dojosetup import __version__, fetch, steamfind, steps
+from dojosetup import __version__, archive, fetch, steamfind, steps
 
 MANIFEST_URL = (
     "https://raw.githubusercontent.com/jgreenmusic/poosics-wasteland/main/manifest/ttw.json"
@@ -162,7 +162,7 @@ def run_cli(args) -> int:
 
     ctx = steps.Context(
         manifest=manifest, fnv=fnv, fo3=fo3, cache=cache,
-        log=log, dry_run=args.dry_run,
+        log=log, dry_run=args.dry_run, ttw_from=args.ttw_from,
     )
 
     log("")
@@ -183,7 +183,7 @@ def run_cli(args) -> int:
         log("")
         log(f"STOPPED: {exc}")
         return 1
-    except fetch.HashMismatch as exc:
+    except (fetch.HashMismatch, archive.ExtractError) as exc:
         log("")
         log(f"STOPPED: {exc}")
         return 1
@@ -232,6 +232,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="also install Mod Organizer 2 (not needed to play)")
     parser.add_argument("--no-wait", action="store_true",
                         help="do not block waiting for the TTW installer to finish")
+    parser.add_argument("--ttw-from", metavar="FOLDER",
+                        help="reuse a TTW build you already have (e.g. a Mod Organizer mod folder)")
     parser.add_argument("--version", action="version", version=f"Dojo Setup {__version__}")
     args = parser.parse_args(argv)
 

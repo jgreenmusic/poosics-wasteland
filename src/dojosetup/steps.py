@@ -36,6 +36,7 @@ class Context:
     cache: Path
     log: Log = print
     dry_run: bool = False
+    ttw_from: str | None = None  # --ttw-from: an existing TTW build to reuse
     results: dict = field(default_factory=dict)
 
     @property
@@ -72,7 +73,8 @@ def acquire(ctx: Context, component: dict, on_progress=None) -> Path:
         raise StepError(
             f"{name} has not been downloaded yet.\n"
             f"  Download {component['filename']} from {component.get('pageUrl','its official site')}\n"
-            "  then run setup again - it checks your Downloads folder automatically."
+            + (f"  Tip: {component['downloadHint']}\n" if component.get("downloadHint") else "")
+            + "  then run setup again - it checks your Downloads folder automatically."
         )
     ctx.log(f"  found and verified {found.name}")
     return found
@@ -290,6 +292,86 @@ def launch_elevated(exe: Path, args: list[str], cwd: Path,
     return ElevatedProcess(info.hProcess)
 
 
+def has_existing_ttw(ctx: Context) -> bool:
+    """Cheap check (no hashing) for the GUI's "what do I need to download"
+    list: is there a complete TTW in Data or a Mod Organizer folder?"""
+    if not ttw_output_problems(ctx.fnv_data, ctx.manifest):
+        return True
+    return any(not ttw_output_problems(f, ctx.manifest) for f in ttw_candidates(ctx))
+
+
+def ttw_candidates(ctx: Context) -> list[Path]:
+    """Folders that may already hold a TTW build - most players who have TTW
+    installed it the standard way, into a Mod Organizer 2 mod folder."""
+    found: list[Path] = []
+    if ctx.ttw_from:
+        found.append(Path(ctx.ttw_from))
+    roots: list[Path] = []
+    local = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+    roots += [p / "mods" for p in (local / "ModOrganizer").glob("*") if p.is_dir()]
+    for drive in "CDEFGH":
+        for base in (Path(f"{drive}:/Modding"), Path(f"{drive}:/Games"), Path(f"{drive}:/MO2")):
+            if base.is_dir():
+                roots += [p for p in base.glob("*/mods")] + [p for p in base.glob("mods")]
+    roots.append(ctx.fnv.parent / "TTW")
+    for root in roots:
+        try:
+            if (root / "TaleOfTwoWastelands.esm").is_file():
+                found.append(root)
+            elif root.is_dir():
+                found += [p.parent for p in root.glob("*/TaleOfTwoWastelands.esm")]
+        except OSError:
+            continue
+    return list(dict.fromkeys(found))
+
+
+def link_into_data(ctx: Context, source: Path) -> int:
+    """Put an existing TTW build into Data without disturbing its original.
+
+    Hard links when it is on the same drive (instant, no extra space, and the
+    player's Mod Organizer setup keeps working), a copy otherwise.
+    """
+    count = 0
+    for item in sorted(source.rglob("*")):
+        if item.is_dir() or item.name.lower() == "meta.ini":  # MO2 bookkeeping
+            continue
+        target = ctx.fnv_data / item.relative_to(source)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            target.unlink()
+        try:
+            os.link(item, target)
+        except OSError:
+            shutil.copy2(item, target)
+        count += 1
+    return count
+
+
+def use_existing_ttw(ctx: Context) -> bool:
+    """Reuse a TTW build the player already has, if it is complete AND the
+    same build as the host's. True if one was placed into Data."""
+    for folder in ttw_candidates(ctx):
+        problems = ttw_output_problems(folder, ctx.manifest)
+        if problems:
+            ctx.log(f"  found TTW at {folder}, but it is incomplete - not using it")
+            continue
+        # Only the TTW plugins themselves: YUPTTW is laid over by its own step.
+        hashes = dict((ctx.manifest.get("ttwOutput") or {}).get("sha256") or {})
+        hashes.pop("YUPTTW.esm", None)
+        check = {**ctx.manifest, "ttwOutput": {"sha256": hashes}}
+        mismatch = ttw_parity_problems(folder, check)
+        if mismatch:
+            ctx.log(f"  found TTW at {folder}, but it is a different build from the "
+                    "host's (different TTW version) - not using it")
+            continue
+        ctx.log(f"  found your existing TTW at {folder} - it matches the host's build")
+        if not ctx.dry_run:
+            ctx.log(f"  placed {link_into_data(ctx, folder)} files into Data "
+                    "(your original is untouched)")
+        return True
+    return False
+
+
 def run_ttw_installer(ctx: Context, component: dict, payload: Path,
                       wait: bool = True) -> None:
     """Extract and launch the TTW installer, then verify and place its output.
@@ -395,11 +477,54 @@ def install_optional_tool(ctx: Context, component: dict, payload: Path) -> None:
     archive.extract(payload, target, kind=component.get("archive"), log=None)
 
 
+def is_large_address_aware(exe: Path) -> bool:
+    """True if the exe's PE header has the 4GB (LargeAddressAware) flag."""
+    with open(exe, "rb") as handle:
+        head = handle.read(4096)
+    pe = int.from_bytes(head[0x3C:0x40], "little")
+    characteristics = int.from_bytes(head[pe + 22:pe + 24], "little")
+    return bool(characteristics & 0x20)
+
+
+def install_4gb_patch(ctx: Context, component: dict, payload: Path) -> None:
+    """Make FalloutNV.exe 4GB-aware with the FNV 4GB Patcher.
+
+    Required, not optional: stock New Vegas has 2 GB of address space and
+    TTW's ~16 GB of assets crash it while loading. The flag cannot simply be
+    set by hand - Steam's DRM wrapper rejects any edited exe with
+    "Application load error 3:0000065432" (seen on the host 2026-09-23). The
+    patcher is built to get past that, and keeps FalloutNV_backup.exe.
+    """
+    exe = ctx.fnv / "FalloutNV.exe"
+    if is_large_address_aware(exe):
+        ctx.log("  FalloutNV.exe is already 4GB-patched - skipping.")
+        return
+    ctx.log(f"  patching {exe.name} for 4GB of memory")
+    if ctx.dry_run:
+        return
+    archive.extract(payload, ctx.fnv, kind=component.get("archive"), log=None)
+    patcher = ctx.fnv / component.get("runExe", "FNVpatch.exe")
+    # It ends with "Press any key", so feed it a newline rather than hang.
+    result = subprocess.run(
+        [str(patcher)], cwd=str(ctx.fnv), input="\n", capture_output=True,
+        text=True, timeout=180,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    if not is_large_address_aware(exe):
+        raise StepError(
+            "The 4GB Patcher ran but FalloutNV.exe is still not patched.\n"
+            f"  Patcher said: {(result.stdout or result.stderr).strip()[:300]}\n"
+            "  Close the game if it is open and run setup again."
+        )
+    ctx.log("  FalloutNV.exe patched (original kept as FalloutNV_backup.exe)")
+
+
 INSTALLERS = {
     "fnv_root": install_fnv_root,
     "fnv_data": install_fnv_data,
     "ttw_installer": run_ttw_installer,
     "optional_tool": install_optional_tool,
+    "fnv_4gb": install_4gb_patch,
 }
 
 
@@ -488,6 +613,152 @@ def write_load_order(ctx: Context) -> list[Path]:
     return written
 
 
+def documents_dir() -> Path:
+    """The real Documents folder - OneDrive often redirects it off ~/Documents."""
+    try:
+        from ctypes import wintypes
+
+        class GUID(ctypes.Structure):
+            _fields_ = [("a", wintypes.DWORD), ("b", wintypes.WORD),
+                        ("c", wintypes.WORD), ("d", ctypes.c_ubyte * 8)]
+
+        # FOLDERID_Documents {FDD39AD0-238F-46AF-ADB4-6C85480369C7}
+        fid = GUID(0xFDD39AD0, 0x238F, 0x46AF,
+                   (ctypes.c_ubyte * 8)(0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7))
+        out = ctypes.c_wchar_p()
+        if ctypes.windll.shell32.SHGetKnownFolderPath(ctypes.byref(fid), 0, None,
+                                                      ctypes.byref(out)) == 0:
+            path = Path(out.value)
+            ctypes.windll.ole32.CoTaskMemFree(out)
+            return path
+    except (AttributeError, OSError):
+        pass
+    return Path.home() / "Documents"
+
+
+def primary_screen_size() -> tuple[int, int] | None:
+    """The primary display's real pixel size, ignoring Windows' DPI scaling.
+
+    EnumDisplaySettings reports the physical mode, so a 4K screen at 150%
+    reads 3840x2160 - not the 2560x1440 a DPI-unaware process is told.
+    """
+    try:
+        devmode = ctypes.create_string_buffer(220)          # DEVMODEW
+        devmode[68:70] = (220).to_bytes(2, "little")        # dmSize
+        if ctypes.windll.user32.EnumDisplaySettingsW(None, -1, devmode):  # ENUM_CURRENT_SETTINGS
+            width = int.from_bytes(devmode[172:176], "little")
+            height = int.from_bytes(devmode[176:180], "little")
+            if width and height:
+                return width, height
+    except (AttributeError, OSError):
+        pass
+    return None
+
+
+#: Tried largest first when the screen itself is not 16:9.
+STANDARD_16_9 = [(3840, 2160), (2560, 1440), (1920, 1080), (1600, 900), (1280, 720)]
+
+
+def pick_resolution(screen: tuple[int, int] | None) -> tuple[int, int]:
+    """A 16:9 resolution for the game. NV:MP refuses anything else: its font
+    texture fails with 'Font spritesheet ... video hardware error' (seen on
+    the host at 1128x634)."""
+    if screen:
+        width, height = screen
+        if width * 9 == height * 16:
+            return width, height
+        for w, h in STANDARD_16_9:
+            if w <= width and h <= height:
+                return w, h
+    return 1920, 1080
+
+
+def set_ini_values(path: Path, values: dict[str, str]) -> list[str]:
+    """Set `key=value` lines in a Bethesda INI in place, keeping its line
+    endings and encoding. Returns the keys that were not found."""
+    raw = path.read_bytes().decode("latin-1")
+    lines = raw.splitlines(keepends=True)
+    missing = dict(values)
+    for i, line in enumerate(lines):
+        body = line.rstrip("\r\n")
+        key = body.split("=", 1)[0].strip() if "=" in body else None
+        if key in missing:
+            ending = line[len(body):]
+            lines[i] = f"{key}={missing.pop(key)}{ending}"
+    path.write_bytes("".join(lines).encode("latin-1"))
+    return list(missing)
+
+
+def configure_game(ctx: Context) -> None:
+    """Apply the game settings NV:MP + TTW need, learned the hard way on the host:
+
+    * sIntroMovie blank - TTW ships a 330 MB 'Fallout INTRO Vsk.bik' under the
+      name New Vegas' default INI already points at, and under NV:MP the game
+      crashed partway through playing it.
+    * a 16:9 resolution at the screen's real size - see pick_resolution.
+    * anti-aliasing off (part of the combination that cleared the font error).
+    * Fallout.ini writable - the host's was read-only, which NV:MP cannot use.
+    """
+    settings = ctx.manifest.get("gameSettings") or {}
+    folder = documents_dir() / "My Games" / "FalloutNV"
+    fallout_ini = folder / "Fallout.ini"
+    prefs_ini = folder / "FalloutPrefs.ini"
+
+    if not (fallout_ini.is_file() and prefs_ini.is_file()):
+        raise StepError(
+            "New Vegas has not created its settings files yet.\n"
+            "  Launch Fallout: New Vegas once from Steam, let it reach the main\n"
+            "  menu, quit, then run setup again. It picks up where it left off."
+        )
+
+    width, height = pick_resolution(primary_screen_size())
+    prefs = {"iSize W": str(width), "iSize H": str(height)}
+    prefs.update(settings.get("FalloutPrefs.ini") or {})
+    main = dict(settings.get("Fallout.ini") or {})
+
+    ctx.log(f"  game settings: {width}x{height} (16:9), "
+            + ", ".join(f"{k}={v}" for k, v in {**prefs, **main}.items() if not k.startswith("iSize")))
+    if ctx.dry_run:
+        return
+
+    for path, values in ((fallout_ini, main), (prefs_ini, prefs)):
+        if not values:
+            continue
+        os.chmod(path, 0o666)  # clears read-only
+        backup = path.with_suffix(path.suffix + ".dojo-backup")
+        if not backup.exists():
+            shutil.copy2(path, backup)
+        missing = set_ini_values(path, values)
+        if missing:
+            ctx.log(f"    note: {path.name} had no {', '.join(missing)} line; left as is")
+
+
+def game_settings_ok(ctx: Context) -> bool:
+    """True if the INIs carry what configure_game sets."""
+    folder = documents_dir() / "My Games" / "FalloutNV"
+    settings = ctx.manifest.get("gameSettings") or {}
+    for name, values in settings.items():
+        if name.startswith("_") or not isinstance(values, dict):
+            continue  # "_comment" and other notes, not INI files
+        path = folder / name
+        if not path.is_file():
+            return False
+        lines = {l.split("=", 1)[0].strip(): l.split("=", 1)[1].strip()
+                 for l in path.read_bytes().decode("latin-1").splitlines() if "=" in l}
+        if any(lines.get(k) != v for k, v in values.items()):
+            return False
+    prefs = folder / "FalloutPrefs.ini"
+    if prefs.is_file():
+        lines = {l.split("=", 1)[0].strip(): l.split("=", 1)[1].strip()
+                 for l in prefs.read_bytes().decode("latin-1").splitlines() if "=" in l}
+        try:
+            if int(lines.get("iSize W", 0)) * 9 != int(lines.get("iSize H", 0)) * 16:
+                return False
+        except ValueError:
+            return False
+    return True
+
+
 def write_launcher(ctx: Context) -> Path:
     """Drop a launcher .bat + a Desktop shortcut that joins the server."""
     server = ctx.manifest["server"]
@@ -507,7 +778,8 @@ def write_launcher(ctx: Context) -> Path:
         "echo Starting NV:MP...\r\n"
         f"echo Server: {host}:{port}\r\n"
         "echo.\r\n"
-        "echo In the launcher choose \"Connect via IP\" and enter:\r\n"
+        "echo If the launcher asks you to log in, choose \"Launch in offline mode\".\r\n"
+        "echo Then choose \"Connect via IP\" and enter:\r\n"
         f"echo     {host}:{port}\r\n"
         "echo.\r\n"
         "start \"\" nvmp_launcher.exe\r\n",
@@ -563,6 +835,12 @@ def verify_install(ctx: Context) -> dict:
         path = config / filename
         checks.append((f"config: {filename}", path.is_file(), str(path)))
 
+    if not ctx.dry_run:
+        checks.append(("game: FalloutNV.exe is 4GB-patched",
+                       is_large_address_aware(ctx.fnv / "FalloutNV.exe"), str(ctx.fnv)))
+        checks.append(("game: settings (16:9, intro video off, AA off)",
+                       game_settings_ok(ctx), str(documents_dir() / "My Games" / "FalloutNV")))
+
     checks.append(("load order: plugin timestamps in order",
                    load_order_is_stamped(ctx), str(ctx.fnv_data)))
 
@@ -571,7 +849,8 @@ def verify_install(ctx: Context) -> dict:
     plugins = config / "plugins.txt"
     try:
         listed = plugins.read_bytes().decode("utf-8").split("\r\n")
-        exact = [name for name in listed if name] == list(order)
+        # NV:MP's launcher adds a "# NV:MP" comment line; comments are fine.
+        exact = [n for n in listed if n and not n.startswith("#")] == list(order)
     except OSError:
         exact = False
     checks.append(("config: plugins.txt lists exactly the pack's plugins",
@@ -602,7 +881,9 @@ def run_all(ctx: Context, *, include_optional: bool = False,
     # xNVSE and the OGG DLLs first (game root), then TTW builds into Data,
     # then YUPTTW goes on top of TTW, then NV:MP last so its launcher sees a
     # finished install.
-    order = ["xnvse", "ttw_ogg", "ttw", "yupttw", "nvmp"]
+    # Manifest order IS install order, so a new plugin is a manifest-only change
+    # (the exe does not need rebuilding). Optional ones are skipped below.
+    order = [c["id"] for c in ctx.manifest["components"]]
     if include_optional:
         order.append("mo2")
 
@@ -614,6 +895,18 @@ def run_all(ctx: Context, *, include_optional: bool = False,
             continue
 
         ctx.log(f"[{component_id}] {component['name']} {component.get('version','')}".rstrip())
+        # TTW already in Data, or a matching build found elsewhere (Mod
+        # Organizer)? Then the 1.2 GB TTW download is not needed at all.
+        if component_id == "ttw":
+            if not ttw_output_problems(ctx.fnv_data, ctx.manifest):
+                ctx.log("  TTW is already built into Data - skipping.")
+                ctx.results[component_id] = "ok"
+                continue
+            ctx.log("  looking for a TTW you already have...")
+            if use_existing_ttw(ctx):
+                ctx.results[component_id] = "ok"
+                continue
+
         payload = acquire(ctx, component, on_progress)
 
         installer = INSTALLERS.get(component.get("install"))
@@ -630,6 +923,7 @@ def run_all(ctx: Context, *, include_optional: bool = False,
 
     ctx.log("[config] load order and launcher")
     write_load_order(ctx)
+    configure_game(ctx)
     write_launcher(ctx)
 
     return verify_install(ctx)

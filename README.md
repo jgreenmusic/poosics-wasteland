@@ -65,8 +65,43 @@ a different one:
 | `YUPTTW_13.9.1_2026.05.09.7z` | the YUP bug-fix patch for TTW |
 | `TTW_OGG_Vorbis_2026.06.13.7z` | audio libraries TTW needs |
 
+**And these from Nexus Mods** (free account needed). On each page open the
+**Files** tab and use **Manual download**:
+
+| Page | File to take |
+|---|---|
+| [FNV 4GB Patcher](https://www.nexusmods.com/newvegas/mods/62552?tab=files) | **"4GB Patcher"** (v1.5, 102 KB). *Not* "FNV4GB for Linux". |
+| [NVTF - New Vegas Tick Fix](https://www.nexusmods.com/newvegas/mods/66537?tab=files) | **"NVTF"** (v10.61) **and** **"NVTF - INI"**. That's two files from the same page. |
+
+Why these are required: without the 4GB patch, New Vegas runs out of memory
+with TTW and crashes. Without NVTF, the host's game crashed over and over under
+NV:MP. Both are fixed and tested. The window lists exactly which of all these
+files you're still missing, with a tip for each one.
+
+Setup downloads the rest for you: the script extender, the NV:MP client, and
+the JohnnyGuitar and ShowOff plugins TTW needs.
+
 Save them anywhere: your Downloads folder, Desktop or Documents all work. mod.pub
 sometimes adds `[mod.pub]` to the filename. That's fine, setup still finds them.
+
+**Before running setup, launch Fallout: New Vegas once from Steam** to the main
+menu, then quit. That creates the settings files setup adjusts. Setup also:
+turns off the intro video (TTW's intro crashed the game under NV:MP), picks a
+**16:9 resolution** for your screen (NV:MP won't start otherwise), and turns off
+anti-aliasing. Your original settings are backed up as `.dojo-backup`.
+
+### Already have TTW installed?
+
+If you set up TTW before (for example through Mod Organizer 2), **you don't need
+to download or rebuild it.** Setup looks for it in the usual Mod Organizer
+places, checks that it's the **same TTW version** as the host's, and links it
+into your game folder. That's instant and uses no extra space, and your Mod
+Organizer setup is left untouched. If yours is somewhere unusual, run setup with
+`--ttw-from "D:\path\to\your\TTW mod folder"`.
+
+If your TTW is a *different* version, setup says so and builds the matching
+one, because a different version gets you kicked from the server. You'll still
+need the YUPTTW and OGG files above, plus the Nexus ones.
 
 Then setup will:
 
@@ -156,12 +191,12 @@ rather than starting over.
 This installs straight into the real `Fallout New Vegas` folder rather than
 through Mod Organizer 2.
 
-NV:MP launches its own process, which **cannot see MO2's virtual filesystem** —
-mods staged behind it are invisible to the game NV:MP actually starts, which
-produces exactly the `Invalid mod revisions` kick above. NV:MP's own
-documentation says the server "must be ran alongside your current Fallout
-installation." Installing directly means the host and every player are
-structurally identical, which is the best parity guarantee available.
+Mod Organizer only shows its mods to programs started *from inside* Mod
+Organizer. Start the NV:MP launcher any other way (a shortcut, say) and those
+mods are invisible, which gets you the `Invalid mod revisions` kick. NV:MP's own
+TTW guide works around that by adding the launcher to Mod Organizer. This pack
+does something simpler: it puts everything in the real game folder, so the
+shortcut always works and the host and every player have the same layout.
 
 MO2 is still available as an opt-in (`--with-mo2`) if you want it for
 single-player modding, but it is not used to play here.

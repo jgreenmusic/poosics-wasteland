@@ -19,7 +19,7 @@ from queue import Empty, Queue
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from . import fetch, steamfind, steps
+from . import archive, fetch, steamfind, steps
 
 BG = "#1b1b1f"
 FG = "#e8e8ea"
@@ -234,6 +234,12 @@ class SetupWindow:
                 self.emit(f"  - {component['name']} {component.get('version','')}")
                 self.emit(f"      file: {component['filename']}")
                 self.emit(f"      from: {component.get('pageUrl','(see its site)')}")
+                if component.get("downloadHint"):
+                    self.emit(f"      tip:  {component['downloadHint']}")
+            self.emit("")
+            self.emit("These come from mod.pub (Tale of Two Wastelands) and Nexus Mods")
+            self.emit("(free account). None of them may be re-hosted, so each player")
+            self.emit("downloads their own copy.")
             self.emit("")
             self.emit("Tale of Two Wastelands cannot be bundled or mirrored: Bethesda")
             self.emit("required it to be distributed only by its own installer, so")
@@ -251,10 +257,20 @@ class SetupWindow:
     def missing_manual(self) -> list[dict]:
         cache = self.cache_dir()
         missing = []
+        # A player who already has a complete TTW (usually through Mod
+        # Organizer) never needs the 1.2 GB TTW download - setup reuses it.
+        have_ttw = False
+        if self.preflight and self.preflight.get("ok"):
+            probe = steps.Context(manifest=self.manifest,
+                                  fnv=self.preflight["games"]["fnv"].path,
+                                  fo3=self.preflight["games"]["fo3"].path, cache=cache)
+            have_ttw = steps.has_existing_ttw(probe)
         for component in self.manifest["components"]:
             if not component.get("required", True):
                 continue
             if component.get("fetch") != "manual":
+                continue
+            if component["id"] == "ttw" and have_ttw:
                 continue
             if fetch.resolve_manual(component, cache) is None:
                 missing.append(component)
@@ -334,7 +350,7 @@ class SetupWindow:
 
         try:
             verdict = steps.run_all(ctx, on_progress=on_progress)
-        except (steps.StepError, fetch.HashMismatch) as exc:
+        except (steps.StepError, fetch.HashMismatch, archive.ExtractError) as exc:
             self.emit("")
             self.emit(f"STOPPED: {exc}")
             self.queue.put(("stage", ("manual", "Try again")))

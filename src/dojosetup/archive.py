@@ -17,6 +17,7 @@ import shutil
 import subprocess
 import sys
 import zipfile
+import zlib
 from pathlib import Path
 from typing import Callable
 
@@ -146,9 +147,35 @@ def _extract_raw(archive: Path, dest: Path, kind: str) -> None:
     elif kind == "zip":
         with zipfile.ZipFile(archive) as handle:
             _safe_members(handle.namelist(), dest)
-            handle.extractall(path=str(dest))
+            for info in handle.infolist():
+                # Skip files already on disk and identical. Re-running setup
+                # then never touches, say, nvmp_launcher.exe while the player
+                # has it open - Windows would refuse the overwrite.
+                if not info.is_dir() and _same_as_on_disk(info, dest / info.filename):
+                    continue
+                try:
+                    handle.extract(info, path=str(dest))
+                except PermissionError as exc:
+                    raise ExtractError(
+                        f"Could not replace {info.filename} - it is in use. Close the "
+                        "NV:MP launcher and Fallout: New Vegas, then run setup again."
+                    ) from exc
     else:
         raise ExtractError(f"Don't know how to extract '{kind}' ({archive.name}).")
+
+
+def _same_as_on_disk(info: zipfile.ZipInfo, target: Path) -> bool:
+    """True if `target` already holds exactly this zip member (size + CRC32)."""
+    try:
+        if not target.is_file() or target.stat().st_size != info.file_size:
+            return False
+        crc = 0
+        with open(target, "rb") as handle:
+            for block in iter(lambda: handle.read(1 << 20), b""):
+                crc = zlib.crc32(block, crc)
+        return crc == info.CRC
+    except OSError:
+        return False
 
 
 def _merge_tree(source: Path, dest: Path) -> None:

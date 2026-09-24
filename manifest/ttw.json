@@ -4,7 +4,7 @@
   "_comment": "SINGLE SOURCE OF TRUTH for the friend-facing TTW client package. Every version and hash here was verified against the host's own staged files on 2026-09-15. Do not bump a version without re-hashing: NV:MP kicks any player whose ESM/ESP set does not match the host byte-for-byte, so version drift between host and friend is a hard failure, not a cosmetic one.",
   "pack": {
     "name": "Poosic's Wasteland",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "generated": "2026-09-23",
     "packNote": "Tale of Two Wastelands 3.4 + YUPTTW + NV:MP co-op client."
   },
@@ -104,6 +104,21 @@
       "note": "OPTIONAL AND OFF BY DEFAULT - deliberately not on the install path. NV:MP launches its own process and therefore cannot see Mod Organizer's virtual filesystem, so mods staged behind the VFS are invisible to it and produce exactly the 'Invalid mod revisions' kick this pack exists to prevent. NV:MP's own README is explicit that the server 'must be ran alongside your current Fallout installation'. This pack installs straight into the real Data folder so the host and every friend are structurally identical. Kept here only for players who separately want MO2 for single-player modding. Verified: GitHub asset size 149,660,212 matches the host's staged copy exactly."
     },
     {
+      "id": "fnv4gb",
+      "name": "FNV 4GB Patcher",
+      "version": "1.5",
+      "fetch": "manual",
+      "pageUrl": "https://www.nexusmods.com/newvegas/mods/62552?tab=files",
+      "filename": "4GB Patcher-62552-1-5-1618787921.7z",
+      "size": 104303,
+      "sha256": "51655788e8454cb8c9b890c86ea2a5fdba722f73f9a367ac2dbbdb0617d91b11",
+      "archive": "7z",
+      "install": "fnv_4gb",
+      "runExe": "FNVpatch.exe",
+      "downloadHint": "On the Files tab take the one called \"4GB Patcher\" (v1.5, 102 KB) - NOT \"FNV4GB for Linux\".",
+      "note": "REQUIRED. Stock New Vegas has 2 GB of address space and TTW crashes it. Setting the flag by hand breaks Steam's DRM ('Application load error 3:0000065432', seen on the host), so this patcher is the only safe way. NV:MP's Getting Started page lists it as required. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it."
+    },
+    {
       "id": "ttw",
       "name": "Tale of Two Wastelands",
       "version": "3.4.0",
@@ -178,6 +193,72 @@
       "vcRedist": "nvmp/res/redist/vc_redist.x86.exe",
       "url": "https://github.com/NVMP/ClientDistribution/releases/download/9.2/build_release_client.zip",
       "versionMarker": "nvmp_storyserver.version"
+    },
+    {
+      "id": "nvtf",
+      "name": "NVTF - New Vegas Tick Fix",
+      "version": "10.61",
+      "fetch": "manual",
+      "pageUrl": "https://www.nexusmods.com/newvegas/mods/66537?tab=files",
+      "filename": "NVTF-66537-10-61-1756195258.7z",
+      "size": 184704,
+      "sha256": "61463f4a3ff3134a503021356f30ac55df28be8d47b3804190e5dc033ad08281",
+      "archive": "7z",
+      "install": "fnv_data",
+      "verify": [
+        "NVSE/Plugins/NVTF.dll"
+      ],
+      "downloadHint": "Main file \"NVTF\". You ALSO need the separate \"NVTF - INI\" file from the same page.",
+      "note": "Engine stability fix. The host crashed repeatedly under NV:MP (FalloutNV.exe+0x282303, memory corruption) until NVTF was installed; NV:MP itself logs 'NVTF is not present!' without it. NV:MP's server registers NVSE plugins, so host and players carry the same set. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it."
+    },
+    {
+      "id": "nvtf_ini",
+      "name": "NVTF - INI",
+      "version": "1.06",
+      "fetch": "manual",
+      "pageUrl": "https://www.nexusmods.com/newvegas/mods/66537?tab=files",
+      "filename": "NVTF - INI-66537-1-06-1751295478.7z",
+      "size": 1401,
+      "sha256": "7b1a4977ebe5772027c9dcf2dc5ad5ab969c61bbb3d3c118d5418fed950abd2a",
+      "archive": "7z",
+      "install": "fnv_data",
+      "verify": [
+        "NVSE/Plugins/NVTF.ini"
+      ],
+      "downloadHint": "The small \"NVTF - INI\" file on NVTF's Files tab.",
+      "note": "NVTF refuses to run without it ('NVTF.ini not found'); it is a separate download so updates never overwrite it. Default settings. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it."
+    },
+    {
+      "id": "johnnyguitar",
+      "name": "JohnnyGuitar NVSE",
+      "version": "5.28",
+      "fetch": "auto",
+      "url": "https://github.com/carxt/JohnnyGuitarNVSE/releases/download/5.28/JohnnyGuitarNVSE-5.28.zip",
+      "filename": "JohnnyGuitarNVSE-5.28.zip",
+      "size": 3453223,
+      "sha256": "5ab249afd70bfbc727659a81c2916c63508664b748f336289b2339894be830bc",
+      "archive": "zip",
+      "install": "fnv_data",
+      "verify": [
+        "NVSE/Plugins/johnnyguitar.dll"
+      ],
+      "note": "TTW 3.4 checks for it at startup ('JohnnyGuitar is missing or outdated'). Official GitHub release, fetched automatically."
+    },
+    {
+      "id": "showoff",
+      "name": "ShowOff xNVSE",
+      "version": "1.84",
+      "fetch": "auto",
+      "url": "https://github.com/Demorome/ShowOff-NVSE/releases/download/1.84/ShowOffNVSE-1.84.zip",
+      "filename": "ShowOffNVSE-1.84.zip",
+      "size": 4898966,
+      "sha256": "cbf42c1bb315dbdb0729fb88ed65dd1a3ea72a3347ef854d33afed7c8da6fdc5",
+      "archive": "zip",
+      "install": "fnv_data",
+      "verify": [
+        "NVSE/Plugins/ShowOffNVSE.dll"
+      ],
+      "note": "TTW 3.4 checks for it at startup. Official GitHub release, fetched automatically."
     }
   ],
   "loadOrder": [
@@ -236,6 +317,16 @@
       "ThePitt - Sounds.bsa": 24537930,
       "Zeta - Main.bsa": 282779903,
       "Zeta - Sounds.bsa": 53755262
+    }
+  },
+  "gameSettings": {
+    "_comment": "Applied to Documents\\My Games\\FalloutNV by setup. Each fixed or guards against a crash seen on the host 2026-09-23. sIntroMovie is set in BOTH files: FalloutPrefs.ini also carries it and overrides Fallout.ini. Resolution is not listed: setup picks a 16:9 size for the player's own screen.",
+    "Fallout.ini": {
+      "sIntroMovie": ""
+    },
+    "FalloutPrefs.ini": {
+      "iMultiSample": "0",
+      "sIntroMovie": ""
     }
   }
 }
