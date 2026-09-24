@@ -14,7 +14,11 @@ param(
     [string]$Tag     = 'v1.1.0',
     [Parameter(Mandatory)][string]$Message,   # commit message - no Co-Authored-By trailer (Julian's rule)
     [string]$Name    = 'Poosics-Wasteland-Setup',
-    [switch]$SkipRelease
+    [switch]$SkipRelease,
+    # Posted to Discord by the bot after the release (Julian's rule: every release is announced).
+    [string]$Summary,            # one line; defaults to the commit message's first line
+    [string[]]$Changes = @(),    # bullet points for players
+    [switch]$NoAnnounce
 )
 
 $ErrorActionPreference = 'Stop'
@@ -93,3 +97,13 @@ if ($LASTEXITCODE -ne 0) { throw 'release step failed' }
 Write-Host ''
 Write-Host 'Published:' -ForegroundColor Green
 Write-Host "  https://github.com/$Repo/releases/latest"
+
+# --- announce ----------------------------------------------------------------
+# The announcer lives in Julian's private ALBERT tree because it reads the bot
+# token; it is never part of this public repo.
+$announcer = 'C:\Users\kagoi\ALBERT\actions\announce-release.py'
+if (-not $NoAnnounce -and (Test-Path $announcer)) {
+    if (-not $Summary) { $Summary = ($Message -split "`r?`n")[0] }
+    python $announcer $Tag $Summary @Changes
+    if ($LASTEXITCODE -ne 0) { Write-Host 'Release is up, but the Discord announcement failed.' -ForegroundColor Yellow }
+}
