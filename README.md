@@ -72,10 +72,16 @@ a different one:
 |---|---|
 | [FNV 4GB Patcher](https://www.nexusmods.com/newvegas/mods/62552?tab=files) | **"4GB Patcher"** (v1.5, 102 KB). *Not* "FNV4GB for Linux". |
 | [NVTF - New Vegas Tick Fix](https://www.nexusmods.com/newvegas/mods/66537?tab=files) | **"NVTF"** (v10.61) **and** **"NVTF - INI"**. That's two files from the same page. |
+| [JIP LN NVSE Plugin](https://www.nexusmods.com/newvegas/mods/58277?tab=files) | **"JIP LN NVSE Plugin"** (v57.30) **and** **"JIP LN Settings INI"** |
+| [TTW NVSE Plugin](https://www.nexusmods.com/newvegas/mods/77415?tab=files) | **"ROOGNVSE"** (v3.3.3b) |
+| [lStewieAl's Tweaks](https://www.nexusmods.com/newvegas/mods/66347?tab=files) | **"lStewieAl's Tweaks"** (v10.00) **and** **"Stewie Tweaks INI"**. *Not* the optional extras (Perk Per Level, Quick Scope Anims). |
 
-Why these are required: without the 4GB patch, New Vegas runs out of memory
-with TTW and crashes. Without NVTF, the host's game crashed over and over under
-NV:MP. Both are fixed and tested. The window lists exactly which of all these
+That's 9 Nexus files in all. Why they're required: without the 4GB patch, New
+Vegas runs out of memory with TTW and crashes. Without NVTF, the host's game
+crashed over and over under NV:MP. JIP LN, the TTW NVSE plugin and lStewieAl's
+Tweaks are checked by TTW itself at startup. All of it was tested on the host
+until it played cleanly. Browsers and Nexus sometimes rename downloads; setup
+recognizes the files by size and fingerprint, so the name doesn't matter. The window lists exactly which of all these
 files you're still missing, with a tip for each one.
 
 Setup downloads the rest for you: the script extender, the NV:MP client, and

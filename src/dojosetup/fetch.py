@@ -186,7 +186,30 @@ def resolve_manual(component: dict, cache_dir: Path,
     for candidate in find_local(filename, extra_dirs=[cache_dir]):
         if verify(candidate, expected, size, progress):
             return candidate
+
+    # Name didn't match? Nexus sometimes names the same file differently per
+    # download (lStewieAl's Tweaks arrives with a random suffix), and browsers
+    # add " (1)". Fall back to any file of exactly the right size, then hash.
+    if size:
+        for candidate in find_by_size(size, extra_dirs=[cache_dir]):
+            if verify(candidate, expected, size, progress):
+                return candidate
     return None
+
+
+def find_by_size(size: int, extra_dirs: list[Path] | None = None) -> list[Path]:
+    """Files of exactly `size` bytes in the usual download places (top level)."""
+    home = Path(os.path.expanduser("~"))
+    dirs = list(extra_dirs or []) + [home / "Downloads", home / "Desktop", home / "Documents"]
+    hits: list[Path] = []
+    for directory in dirs:
+        try:
+            for entry in os.scandir(directory):
+                if entry.is_file() and entry.stat().st_size == size:
+                    hits.append(Path(entry.path))
+        except OSError:
+            continue
+    return hits
 
 
 def resolve_auto(component: dict, cache_dir: Path,

@@ -112,8 +112,14 @@ def install_fnv_root(ctx: Context, component: dict, payload: Path) -> None:
 
 
 def install_fnv_data(ctx: Context, component: dict, payload: Path) -> None:
-    """Extract into Data/ (YUPTTW)."""
+    """Extract into Data/ (YUPTTW, NVSE plugins)."""
     target = ctx.fnv_data
+    # A stub INI the plugin fills in itself on first launch (Stewie Tweaks):
+    # once it exists, re-extracting would wipe the player's settings.
+    if component.get("keepExisting") and all(
+            (target / name).exists() for name in component.get("verify", [])):
+        ctx.log(f"  {component['name']} already present - keeping your copy")
+        return
     ctx.log(f"  installing {component['name']} -> {target}")
     if ctx.dry_run:
         return
@@ -721,6 +727,18 @@ def configure_game(ctx: Context) -> None:
     if ctx.dry_run:
         return
 
+    custom = ctx.manifest.get("customIni")
+    if custom:
+        path = folder / custom.get("file", "FalloutCustom.ini")
+        body = custom["content"].replace("\r\n", "\n").replace("\n", "\r\n")
+        if not (path.is_file() and path.read_bytes() == body.encode("ascii")):
+            if path.is_file():
+                backup = path.with_suffix(path.suffix + ".dojo-backup")
+                if not backup.exists():
+                    shutil.copy2(path, backup)
+            path.write_bytes(body.encode("ascii"))
+        ctx.log(f"    {path.name} written (TTW's settings: starting quest, stability)")
+
     for path, values in ((fallout_ini, main), (prefs_ini, prefs)):
         if not values:
             continue
@@ -746,6 +764,12 @@ def game_settings_ok(ctx: Context) -> bool:
         lines = {l.split("=", 1)[0].strip(): l.split("=", 1)[1].strip()
                  for l in path.read_bytes().decode("latin-1").splitlines() if "=" in l}
         if any(lines.get(k) != v for k, v in values.items()):
+            return False
+    custom = ctx.manifest.get("customIni")
+    if custom:
+        path = folder / custom.get("file", "FalloutCustom.ini")
+        body = custom["content"].replace("\r\n", "\n").replace("\n", "\r\n")
+        if not (path.is_file() and path.read_bytes() == body.encode("ascii")):
             return False
     prefs = folder / "FalloutPrefs.ini"
     if prefs.is_file():
