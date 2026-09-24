@@ -17,7 +17,7 @@ from pathlib import Path
 from queue import Empty, Queue
 
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from . import archive, fetch, steamfind, steps
 
@@ -105,6 +105,15 @@ class SetupWindow:
         )
         self.secondary.pack(side="right", padx=(0, 10))
         self.secondary.pack_forget()
+
+        self.extra_dirs: list[Path] = []
+        self.search_btn = tk.Button(
+            buttons, text="Search another folder...", command=self.pick_folder,
+            bg="#2a2a30", fg=FG, activebackground="#35353d",
+            activeforeground=FG, bd=0, padx=16, pady=9,
+            font=("Segoe UI", 9), cursor="hand2",
+        )
+        self.search_btn.pack(side="right", padx=(0, 10))
 
         tk.Button(buttons, text="Open log folder", command=self.open_log,
                   bg=BG, fg=DIM, activebackground=BG, activeforeground=FG,
@@ -208,8 +217,31 @@ class SetupWindow:
         self.worker = threading.Thread(target=wrapped, daemon=True)
         self.worker.start()
 
+    def pick_folder(self) -> None:
+        """Let the player point at wherever they keep mod downloads - e.g. a
+        Mod Organizer 'downloads' or 'mods' folder we did not find ourselves."""
+        if self.busy:
+            return
+        folder = filedialog.askdirectory(
+            title="Pick a folder with your Fallout mod downloads "
+                  "(e.g. Mod Organizer's 'downloads' folder)")
+        if not folder:
+            return
+        self.extra_dirs.append(Path(folder))
+        self.emit(f"Also searching: {folder}")
+        self.stage = "check"
+        self.on_action()
+
     def do_check(self) -> None:
         self.emit("Checking your PC...")
+        dirs = fetch.use_search_dirs(self.extra_dirs)
+        if dirs:
+            self.emit(f"  Also looking in {len(dirs)} Mod Organizer / chosen folder(s)")
+            self.emit("  for files you already have:")
+            for folder in dirs[:6]:
+                self.emit(f"    {folder}")
+            if len(dirs) > 6:
+                self.emit(f"    ...and {len(dirs) - 6} more")
         result = steamfind.preflight(self.manifest)
         self.preflight = result
         self.queue.put(("status", result))
@@ -248,6 +280,10 @@ class SetupWindow:
             self.emit("automatically and checks each one is the exact right version.")
             self.emit("")
             self.emit("Click 'Open downloads page', grab the files, then click Install.")
+            self.emit("")
+            self.emit("Already installed TTW with Mod Organizer? Click 'Search another")
+            self.emit("folder...' and pick Mod Organizer's 'downloads' folder - setup")
+            self.emit("will use the files you already have.")
             self.queue.put(("stage", ("manual", "Install")))
             return
 
@@ -271,6 +307,8 @@ class SetupWindow:
             if component.get("fetch") != "manual":
                 continue
             if component["id"] == "ttw" and have_ttw:
+                continue
+            if self.preflight and self.preflight.get("ok") and                     steps.satisfy_from_installed(probe, component, apply=False):
                 continue
             if fetch.resolve_manual(component, cache) is None:
                 missing.append(component)

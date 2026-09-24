@@ -144,6 +144,12 @@ def run_cli(args) -> int:
     server = manifest["server"]
     log(f"pack: {pack['name']} {pack['version']}  ->  {server['host']}:{server['port']}")
 
+    dirs = fetch.use_search_dirs(args.search)
+    if dirs:
+        log(f"Also looking for downloads in {len(dirs)} Mod Organizer / chosen folder(s):")
+        for folder in dirs[:8]:
+            log(f"  {folder}")
+
     result = steamfind.preflight(manifest)
     print_preflight(result, log)
     if not result["ok"]:
@@ -232,6 +238,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="also install Mod Organizer 2 (not needed to play)")
     parser.add_argument("--no-wait", action="store_true",
                         help="do not block waiting for the TTW installer to finish")
+    parser.add_argument("--search", metavar="FOLDER", action="append", default=[],
+                        help="also look for downloads here (repeatable); Mod Organizer folders are found automatically")
     parser.add_argument("--ttw-from", metavar="FOLDER",
                         help="reuse a TTW build you already have (e.g. a Mod Organizer mod folder)")
     parser.add_argument("--version", action="version", version=f"Dojo Setup {__version__}")

@@ -320,6 +320,8 @@ def ttw_candidates(ctx: Context) -> list[Path]:
             if base.is_dir():
                 roots += [p for p in base.glob("*/mods")] + [p for p in base.glob("mods")]
     roots.append(ctx.fnv.parent / "TTW")
+    from . import mo2
+    roots += [inst.mods for inst in mo2.instances()]   # the REAL mods folders
     for root in roots:
         try:
             if (root / "TaleOfTwoWastelands.esm").is_file():
@@ -481,6 +483,105 @@ def install_optional_tool(ctx: Context, component: dict, payload: Path) -> None:
     if ctx.dry_run:
         return
     archive.extract(payload, target, kind=component.get("archive"), log=None)
+
+
+# --------------------------------------------------------------------------
+# using what the player already has (the "already installed TTW" case)
+# --------------------------------------------------------------------------
+
+def _file_matches(path: Path, size: int, sha256: str) -> bool:
+    """INI files only have to exist - players edit them. Everything else must
+    be byte-identical (size first, so most misses cost no hashing)."""
+    if not path.is_file():
+        return False
+    if path.suffix.lower() == ".ini":
+        return True
+    return path.stat().st_size == size and fetch.sha256_file(path) == sha256
+
+
+def installs_present(folder: Path, installs: dict) -> bool:
+    return bool(installs) and all(
+        _file_matches(folder / rel, size, sha) for rel, (size, sha) in installs.items())
+
+
+def _mo2_mod_folders() -> list[Path]:
+    from . import mo2
+    folders: list[Path] = []
+    for inst in mo2.instances():
+        try:
+            folders += [p for p in inst.mods.iterdir() if p.is_dir()]
+        except OSError:
+            continue
+    return folders
+
+
+def _key_dll(component: dict) -> str | None:
+    """The plugin's own DLL, e.g. NVSE/Plugins/jip_nvse.dll."""
+    for rel in component.get("installs", {}):
+        if rel.lower().endswith(".dll"):
+            return rel
+    return None
+
+
+def _link(source: Path, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        target.unlink()
+    try:
+        os.link(source, target)   # instant, no extra space, same drive
+    except OSError:
+        shutil.copy2(source, target)
+
+
+def satisfy_from_installed(ctx: Context, component: dict, apply: bool = True) -> bool:
+    """True if this component needs no download because the player already has
+    it: already in the game, 4GB-patched, or installed in Mod Organizer.
+
+    apply=False only answers the question (the GUI's "what's missing" list);
+    apply=True also links a Mod Organizer copy into the game folder.
+    """
+    if component.get("install") == "fnv_4gb":
+        return is_large_address_aware(ctx.fnv / "FalloutNV.exe")
+
+    installs = component.get("installs") or {}
+    if not installs:
+        return False
+    target = ctx.fnv if component.get("install") == "fnv_root" else ctx.fnv_data
+
+    if installs_present(target, installs):
+        if apply:
+            ctx.log(f"  already installed - skipping {component['name']}")
+        return True
+
+    # Exact copy installed as a Mod Organizer mod?
+    for mod in _mo2_mod_folders():
+        if installs_present(mod, installs):
+            if apply:
+                ctx.log(f"  found it in your Mod Organizer: {mod.name}")
+                if not ctx.dry_run:
+                    for rel in installs:
+                        _link(mod / rel, target / rel)
+            return True
+
+    # A different version of the same NVSE plugin in Mod Organizer. Accepted
+    # for plugins only: the server does not require identical NVSE plugins
+    # (StrictNVSE is off) and TTW enforces its own minimum versions at startup.
+    # TTW's own files are never accepted this way - those get players kicked.
+    key = _key_dll(component)
+    if component.get("acceptInstalledVersion") and key:
+        for mod in _mo2_mod_folders():
+            dll = mod / key
+            if dll.is_file():
+                if apply:
+                    ctx.log(f"  using the version already in your Mod Organizer: {mod.name}")
+                    if not ctx.dry_run:
+                        plugins = dll.parent
+                        for item in plugins.rglob("*"):
+                            if item.is_file():
+                                _link(item, ctx.fnv_data / "NVSE" / "Plugins"
+                                      / item.relative_to(plugins))
+                return True
+    return False
 
 
 def is_large_address_aware(exe: Path) -> bool:
@@ -930,6 +1031,12 @@ def run_all(ctx: Context, *, include_optional: bool = False,
             if use_existing_ttw(ctx):
                 ctx.results[component_id] = "ok"
                 continue
+
+        # Already installed, 4GB-patched, or sitting in the player's Mod
+        # Organizer? Then there is nothing to download for this one.
+        if component_id != "ttw" and satisfy_from_installed(ctx, component):
+            ctx.results[component_id] = "ok"
+            continue
 
         payload = acquire(ctx, component, on_progress)
 

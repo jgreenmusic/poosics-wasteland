@@ -4,7 +4,7 @@
   "_comment": "SINGLE SOURCE OF TRUTH for the friend-facing TTW client package. Every version and hash here was verified against the host's own staged files on 2026-09-15. Do not bump a version without re-hashing: NV:MP kicks any player whose ESM/ESP set does not match the host byte-for-byte, so version drift between host and friend is a hard failure, not a cosmetic one.",
   "pack": {
     "name": "Poosic's Wasteland",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "generated": "2026-09-23",
     "packNote": "Tale of Two Wastelands 3.4 + YUPTTW + NV:MP co-op client."
   },
@@ -151,7 +151,21 @@
         "libvorbisfile.dll",
         "ogg.dll"
       ],
-      "note": "Three DLLs that replace FNV's stock Vorbis libs in the game root. Needed for TTW's converted audio; without them FO3-side dialogue is silent."
+      "note": "Three DLLs that replace FNV's stock Vorbis libs in the game root. Needed for TTW's converted audio; without them FO3-side dialogue is silent.",
+      "installs": {
+        "libvorbis.dll": [
+          658432,
+          "bb2898a4be2b8b87395c66a9dbbb7039f0371f2782d9f861ceda0f5413df4cf7"
+        ],
+        "libvorbisfile.dll": [
+          31744,
+          "b8c838517ef7bb7f9d4061e119750952b9b9e04c2f5f59d3bb39f0ddabcb8bc8"
+        ],
+        "ogg.dll": [
+          29184,
+          "8d8141a8fd6d7a95d7b997c62cec6afe42f8a257b9529a67d2f6892d069c8ea8"
+        ]
+      }
     },
     {
       "id": "yupttw",
@@ -170,7 +184,29 @@
         "YUPTTW - Main.bsa",
         "YUPTTW - Sounds.bsa"
       ],
-      "note": "Ships YUPTTW.esm plus Main/Sounds BSAs and their .override markers. Extracted straight into the Fallout New Vegas Data folder, on top of the TTW output, so NV:MP sees it in the real game folder rather than behind a mod manager."
+      "note": "Ships YUPTTW.esm plus Main/Sounds BSAs and their .override markers. Extracted straight into the Fallout New Vegas Data folder, on top of the TTW output, so NV:MP sees it in the real game folder rather than behind a mod manager.",
+      "installs": {
+        "YUPTTW - Main.bsa": [
+          141458115,
+          "0dcad1404d2c39b5825679c48126fd995e403d84fce40d3084a250302c94c843"
+        ],
+        "YUPTTW - Main.override": [
+          0,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        "YUPTTW - Sounds.bsa": [
+          8462061,
+          "e653fd5d39e444dd86578f617683cd951abd68617536e425a39179ba1cbdc86b"
+        ],
+        "YUPTTW - Sounds.override": [
+          0,
+          "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        ],
+        "YUPTTW.esm": [
+          9881315,
+          "193c06507961e318f7855d81630ba163077e34bf24d98bb05e371ab76cc5bb28"
+        ]
+      }
     },
     {
       "id": "nvmp",
@@ -209,7 +245,14 @@
         "NVSE/Plugins/NVTF.dll"
       ],
       "downloadHint": "Main file \"NVTF\". You ALSO need the separate \"NVTF - INI\" file from the same page.",
-      "note": "Engine stability fix. The host crashed repeatedly under NV:MP (FalloutNV.exe+0x282303, memory corruption) until NVTF was installed; NV:MP itself logs 'NVTF is not present!' without it. NV:MP's server registers NVSE plugins, so host and players carry the same set. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it."
+      "note": "Engine stability fix. The host crashed repeatedly under NV:MP (FalloutNV.exe+0x282303, memory corruption) until NVTF was installed; NV:MP itself logs 'NVTF is not present!' without it. NV:MP's server registers NVSE plugins, so host and players carry the same set. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it.",
+      "installs": {
+        "NVSE/Plugins/NVTF.dll": [
+          27136,
+          "b642ef95ff76fbc5265cf413a647d8017a617c5914a8f5697047a6320b54c45e"
+        ]
+      },
+      "acceptInstalledVersion": true
     },
     {
       "id": "nvtf_ini",
@@ -226,7 +269,13 @@
         "NVSE/Plugins/NVTF.ini"
       ],
       "downloadHint": "The small \"NVTF - INI\" file on NVTF's Files tab.",
-      "note": "NVTF refuses to run without it ('NVTF.ini not found'); it is a separate download so updates never overwrite it. Default settings. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it."
+      "note": "NVTF refuses to run without it ('NVTF.ini not found'); it is a separate download so updates never overwrite it. Default settings. Nexus Mods requires a free account to download, so this is a manual download: setup opens the page, finds the file in Downloads/Desktop/Documents, and verifies it.",
+      "installs": {
+        "NVSE/Plugins/NVTF.ini": [
+          2290,
+          "b80e3659e799ff3fd1710322ecab004a45dbcd8ed8884bc93119c8e91b3f9cb0"
+        ]
+      }
     },
     {
       "id": "johnnyguitar",
@@ -242,7 +291,17 @@
       "verify": [
         "NVSE/Plugins/johnnyguitar.dll"
       ],
-      "note": "TTW 3.4 checks for it at startup ('JohnnyGuitar is missing or outdated'). Official GitHub release, fetched automatically."
+      "note": "TTW 3.4 checks for it at startup ('JohnnyGuitar is missing or outdated'). Official GitHub release, fetched automatically.",
+      "installs": {
+        "nvse/plugins/johnnyguitar.dll": [
+          286720,
+          "456b6ce716b6b18d3de13e20eca1692070f7decf35c39daa165f6499cc1113d3"
+        ],
+        "nvse/plugins/JohnnyGuitar.ini": [
+          1741,
+          "1556b4e9897f0ef8b787ea44c440626fb501427416544309fab06b7b88ef404d"
+        ]
+      }
     },
     {
       "id": "showoff",
@@ -258,7 +317,13 @@
       "verify": [
         "NVSE/Plugins/ShowOffNVSE.dll"
       ],
-      "note": "TTW 3.4 checks for it at startup. Official GitHub release, fetched automatically."
+      "note": "TTW 3.4 checks for it at startup. Official GitHub release, fetched automatically.",
+      "installs": {
+        "nvse/plugins/ShowOffNVSE.dll": [
+          1091584,
+          "37cb22c5288fedd0d57196c8c2f6bbaba5a1dafd9ce58f14dac9410dbee7ef3e"
+        ]
+      }
     },
     {
       "id": "jip",
@@ -275,7 +340,18 @@
         "NVSE/Plugins/jip_nvse.dll"
       ],
       "downloadHint": "Main file \"JIP LN NVSE Plugin\" (v57.30). Also take \"JIP LN Settings INI\" from the same page.",
-      "note": "TTW 3.4 requires 57.21+ ('JIP LN NVSE Plugin is missing or you are using a version older than 57.21'). JIP also provides the FalloutCustom.ini feature setup relies on. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works."
+      "note": "TTW 3.4 requires 57.21+ ('JIP LN NVSE Plugin is missing or you are using a version older than 57.21'). JIP also provides the FalloutCustom.ini feature setup relies on. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works.",
+      "installs": {
+        "nvse/plugins/jip_nvse.dll": [
+          502272,
+          "9d2779647ed0ce63043390f47fc978e3234af8e558dc6cb6bcb231478a2d74d4"
+        ],
+        "nvse/plugins/textinput/texteditmenu.xml": [
+          13778,
+          "539bc69d6f2103164fca060fe4c1a8881f2056f05e050fe14b479b6976eb00e9"
+        ]
+      },
+      "acceptInstalledVersion": true
     },
     {
       "id": "jip_ini",
@@ -292,7 +368,13 @@
         "NVSE/Plugins/jip_nvse.ini"
       ],
       "downloadHint": "The small \"JIP LN Settings INI\" file on JIP's Files tab.",
-      "note": "JIP's settings, as the Best of Times guide installs them. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works."
+      "note": "JIP's settings, as the Best of Times guide installs them. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works.",
+      "installs": {
+        "nvse/plugins/jip_nvse.ini": [
+          5865,
+          "db231f7c2cf7175191863970d622159c4e1336c11ab4c95897b2f89c0deb2243"
+        ]
+      }
     },
     {
       "id": "ttw_nvse",
@@ -310,7 +392,18 @@
         "NVSE/Plugins/TTW.ini"
       ],
       "downloadHint": "Main file \"ROOGNVSE\" (v3.3.3b).",
-      "note": "TTW's own NVSE plugin; TTW 3.4 checks for it at startup. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works."
+      "note": "TTW's own NVSE plugin; TTW 3.4 checks for it at startup. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works.",
+      "installs": {
+        "nvse/plugins/TTW.ini": [
+          3336,
+          "46295e074ac5c6acf28f9b4afec80e9dfb234f9af2558094b8e6df6e562ddf7c"
+        ],
+        "nvse/plugins/ttw_nvse.dll": [
+          38400,
+          "874fcf6c101f005fbbedee6dbe0d4c40a0d537c53f06925e4cf09ee66e4e94ea"
+        ]
+      },
+      "acceptInstalledVersion": true
     },
     {
       "id": "stewie",
@@ -327,7 +420,294 @@
         "NVSE/Plugins/nvse_stewie_tweaks.dll"
       ],
       "downloadHint": "Main file \"lStewieAl's Tweaks\" (v10.00) and \"Stewie Tweaks INI\". NOT the optional extras (Perk Per Level, Quick Scope Anims) - they change gameplay and would differ from everyone else.",
-      "note": "TTW 3.4 checks for it at startup. Nexus names this download unusually (a random suffix), hence the fingerprint matching. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works."
+      "note": "TTW 3.4 checks for it at startup. Nexus names this download unusually (a random suffix), hence the fingerprint matching. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works.",
+      "installs": {
+        "Menus/prefabs/list_box_ST.xml": [
+          5520,
+          "44aff1fe458dd56af7e9094c6db357cfc38e8d2206c7fdf0f6d00309e05e1ac8"
+        ],
+        "Menus/prefabs/lStewieAl/2Hotkey.xml": [
+          207,
+          "35d9da7a47e69a21599b832591a0b086ce660b5b31fcca99bd2b72cb60f14f29"
+        ],
+        "Menus/prefabs/lStewieAl/ArmorConditionNotch.xml": [
+          267,
+          "3440642f013645016c293ece0ad04298606b2ff5f62a038467f507e70d29f557"
+        ],
+        "Menus/prefabs/lStewieAl/BlackJackDisplay.xml": [
+          711,
+          "73232219c8291cb3b32684906da958f47f81fb84d4fece602b02455ee6b345fb"
+        ],
+        "Menus/prefabs/lStewieAl/ConsoleBackground.xml": [
+          613,
+          "7036cd257896b2d04f98f1f13a367b964b2c3403fb449849f929af5cde6986fd"
+        ],
+        "Menus/prefabs/lStewieAl/FatigueIndicator.xml": [
+          515,
+          "9f985f0b4e97df47761f3b2efe3c278339ed7bf599e59135a443da4d497fb637"
+        ],
+        "Menus/prefabs/lStewieAl/MapMenuRecentreButton.xml": [
+          818,
+          "ebdaf624f5cd2b722aa1c3572791cf9e5114db59debd8693f681a2c5ce822f4f"
+        ],
+        "Menus/prefabs/lStewieAl/MarkerLocationName.xml": [
+          471,
+          "7d01136b6463ffc159467e1482a357e1d6cf5085915c5c694ab9b6d1cf63188f"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/Barter.xml": [
+          301,
+          "a536350d4bffcc95b24f6c41b1db6b4a54aeec01a40cfe9174786ecd9afeb3dc"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/Container.xml": [
+          301,
+          "dd3ba00d9ad0f74d8144c3e3dd3d66fd7bd05ecff352b66c8f37269e8721b159"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/Inventory.xml": [
+          509,
+          "306b8f8103a2f440b229277c9f40c530246dc6e0e9b1f396d3223079b55866fb"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/LevelUp.xml": [
+          291,
+          "1f35e948673ba2ea318c5547be561fca300ec39ac2821771b3f9229ec19cbffd"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/Map.xml": [
+          509,
+          "ece91dda1a349609fbef6cc545ffab123b6bf0574b09091011e7e857677b103b"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/Recipe.xml": [
+          301,
+          "1c17880542a489a049921ddcbff3f22119278795a311fd73bd595a04e6cf60da"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/SaveLoad.xml": [
+          301,
+          "1c17880542a489a049921ddcbff3f22119278795a311fd73bd595a04e6cf60da"
+        ],
+        "Menus/prefabs/lStewieAl/MenuSearch/Stats.xml": [
+          295,
+          "8b532f89bba21c350ab201cede1276eb54c964058ed5fbdb1b34ddb9d5148ddf"
+        ],
+        "Menus/prefabs/lStewieAl/NearbyActorIndicator.xml": [
+          528,
+          "5fb5631c8931fc51bc6307c2f71dfe4122f40a7dbd3ecda38328f049b4a50d17"
+        ],
+        "Menus/prefabs/lStewieAl/PipboyChallengeIcon.xml": [
+          341,
+          "562f8e84eb98dadd56e781c191df4853087254d6c635ab5cd3716f010a9bc59e"
+        ],
+        "Menus/prefabs/lStewieAl/PlayerPositionIndicator.xml": [
+          930,
+          "35d956095ed436e7ab04552b3be73ce7686f739a7dc549b9bbb174a20b90bf97"
+        ],
+        "Menus/prefabs/lStewieAl/QuestModSelector.xml": [
+          1658,
+          "fe2437a48f39d171b47cb1767e9797148abbe96d55132744a8208c6bd44031ba"
+        ],
+        "Menus/prefabs/lStewieAl/RecenterSearchPrediction.xml": [
+          543,
+          "1f0af6b618b692535f311c024d39a04e745bba3cae35bc7a9b609376f6ec388c"
+        ],
+        "Menus/prefabs/lStewieAl/SaveCharacterSelector.xml": [
+          1862,
+          "815c04fcc9cbc508b90cc702ba9d104c7917356327315f13ef182c8ba618a0e1"
+        ],
+        "Menus/prefabs/lStewieAl/SaveVersionVUI.xml": [
+          559,
+          "71d202476aeb4264aae8719bd966298a22b7251f1d82b43dcd255163d6ed1f36"
+        ],
+        "Menus/prefabs/lStewieAl/SortButton/Barter.xml": [
+          1340,
+          "3aa1baa274fea737fc9ab789a94e8715ff05e5b8ff162791bfb4f28d491b0109"
+        ],
+        "Menus/prefabs/lStewieAl/SortButton/Container.xml": [
+          1340,
+          "e7072d853b679e41c48fd7431bf907d6b44ab31d98e85817ba86296442dcde15"
+        ],
+        "Menus/prefabs/lStewieAl/SortButton/Inventory.xml": [
+          1296,
+          "2aba12002d82c76b702fdc98b25f523bcc3571d1693221300d8d3ce29abb4c3d"
+        ],
+        "Menus/prefabs/lStewieAl/WeaponNameLabel.xml": [
+          470,
+          "8e3c50b9834972bdc1efb8073ecfebd5ef8a9fc2fe7d51c3ec9c76f8447cdcab"
+        ],
+        "Menus/prefabs/scrollbar_vert_ST.xml": [
+          10250,
+          "8bddac10b5e18f189df9bf057687b96d85c40a8f9ff9e8c1728c46aae29b9dc1"
+        ],
+        "Menus/stew_menu.xml": [
+          30886,
+          "6014f31bc66e0880ddbb7fd931d7a3c7b68337ca7bc8e03f8b911d503d225753"
+        ],
+        "NVSE/plugins/nvse_stewie_tweaks.dll": [
+          1069056,
+          "c19007b47f39df2ce07cfc1add1a27090302cf35e1673ba35bee61cb5800db95"
+        ],
+        "NVSE/plugins/Tweaks/MenuConfig/AllTweaks.json": [
+          343734,
+          "5d2ae4f477325664d55502ad1d30c0f01d6e04a9b61e1ac85309591ddbcc93ec"
+        ],
+        "Textures/fonts/Monofonto_STn.fnt": [
+          14632,
+          "6d8bc09b33fa5890973f1edd02e5c8214ecf12c5ca0804990ee5a1ec23eb2c65"
+        ],
+        "Textures/fonts/Monofonto_STn.tex": [
+          262152,
+          "aea8ff464e98660f075086ab47933a89c1fc920abc96030cc7b16df6bc8295e6"
+        ],
+        "Textures/Interface/HUD/glow_hud_compass_objective_marker_above.dds": [
+          1152,
+          "961a16e367b57eae03643c8a6bc75ed901f29ebff0a786be362ac9358fbdf03b"
+        ],
+        "Textures/Interface/HUD/glow_hud_compass_objective_marker_below.dds": [
+          1152,
+          "a6321d7a94b8d00d78d783bac563a5b852e84df56fbcbf26af8cd9066c35067d"
+        ],
+        "Textures/Interface/HUD/glow_hud_compass_PC_marker_above.dds": [
+          4224,
+          "57b465415dc1a885ee1c91a4db3b08fb509f04c6bdc0c83e5a870fc7c40e18b8"
+        ],
+        "Textures/Interface/HUD/glow_hud_compass_PC_marker_below.dds": [
+          4224,
+          "eb97e320df7958fda9234f35404ec6c0561a4a96c1681760b1e7681166b05783"
+        ],
+        "Textures/Interface/HUD/glow_hud_compass_pc_marker_door.dds": [
+          4224,
+          "5edba691fc9ea29812383ca2321330439d05c28270590caae088d965150853c2"
+        ],
+        "Textures/Interface/HUD/glow_hud_compass_PC_marker_neutral.dds": [
+          4224,
+          "bcfc5842c77266aea85a9dc847f1416b97d051918d3144059a6d9109e0d01c2e"
+        ],
+        "Textures/Interface/HUD/glow_hud_door.dds": [
+          4224,
+          "17890742b63793ad186cfdf5bfcecc53acf00a7e962844db201f62219a3aa104"
+        ],
+        "Textures/Interface/HUD/glow_hud_door_above.dds": [
+          4224,
+          "0758e9f47fe1b675bc20863730e6f1d526892278727544c6236c08aca90053b7"
+        ],
+        "Textures/Interface/HUD/glow_hud_door_below.dds": [
+          4224,
+          "94a684dae25595350daa85dc17f1fbd43b683552d2f6f48f22da640bbca55b19"
+        ],
+        "Textures/Interface/HUD/glow_hud_tick_mark_above.dds": [
+          1152,
+          "961a16e367b57eae03643c8a6bc75ed901f29ebff0a786be362ac9358fbdf03b"
+        ],
+        "Textures/Interface/HUD/glow_hud_tick_mark_below.dds": [
+          1152,
+          "a6321d7a94b8d00d78d783bac563a5b852e84df56fbcbf26af8cd9066c35067d"
+        ],
+        "Textures/Interface/Icons/Local Map/iron_exterior_door.dds": [
+          16512,
+          "3db79996a0c4f9735ee0f3b61fdc59333d0be72417bf45db07f3f0094030c191"
+        ],
+        "Textures/Interface/Icons/Local Map/iron_interior_door.dds": [
+          16512,
+          "70aa086036d4d0af56dab5b94b63e5f7ca5c3ba2c1f59c33073d989eb2522856"
+        ],
+        "Textures/lStewieAl/all.dds": [
+          1424,
+          "dda80c15f157a81aef28fcbdf94b6d8116aad44f0415e749d16cb3fe77d53664"
+        ],
+        "Textures/lStewieAl/arrow_left.dds": [
+          912,
+          "a8cd7a6400683a39fb77c620ff9ffcbb02e1f01663ff049cace028bf20a6d4c2"
+        ],
+        "Textures/lStewieAl/arrow_right.dds": [
+          912,
+          "3a60d9f8de3c70d988e644c7c9beae86814effff84159a1cbdff7acab7b45f9a"
+        ],
+        "Textures/lStewieAl/BGFuzzy.dds": [
+          352128,
+          "8978624a0a46d9c1ccab4c3387e2ad3eb7ad13924dd9fd68f10b8e3441c5cfe2"
+        ],
+        "Textures/lStewieAl/category.dds": [
+          912,
+          "606c82850779b31a60a6cb2cf5e3b83ab61bd138349034e36642116e6fd67767"
+        ],
+        "Textures/lStewieAl/checkboxGo.dds": [
+          2432,
+          "69ba265255618cc880eb34a11cb251bf469b6afe93ef6936c88ac7865a170d9a"
+        ],
+        "Textures/lStewieAl/checkboxNo.dds": [
+          2432,
+          "ffa642f0a7efc52629d2e46c1c15e49204fb2b04698e2e5ab58b940c946243fb"
+        ],
+        "Textures/lStewieAl/marker.dds": [
+          848,
+          "cb754c3d25dd7f7efb0ef5c3f1d538a0eca579c867a55b4ffe97de7455bd8d8f"
+        ],
+        "Textures/lStewieAl/mod.dds": [
+          1424,
+          "35e0268bdb29a222be128a623edd5b1400918cbee969b0ef115474f212367205"
+        ],
+        "Textures/lStewieAl/Off.dds": [
+          1424,
+          "acfc39d080e2620475aa62c39947ea6012dcd1f543d1fd52786145ca4cb4b7d6"
+        ],
+        "Textures/lStewieAl/On.dds": [
+          1424,
+          "61b16a9b5b72e3b2efc2796121d9acb17fae5098ce7f28cb0fb1c1d1e5a0f64a"
+        ],
+        "Textures/lStewieAl/search.dds": [
+          2432,
+          "f417ff8f65ec039c380f332b5df5324eff3d1973bc0f252480f35c30bffe2a33"
+        ],
+        "Textures/lStewieAl/searchStop.dds": [
+          2432,
+          "cbdf9c5a69b1678b6a6e5e12a66b8b19405d0636fcc84c7aaaa56077013ca414"
+        ],
+        "Textures/lStewieAl/Sorting/empty.dds": [
+          2432,
+          "b4a605b0588eca917315e257e2a3ad9653fa94c8110855aacd2f27e0730514f6"
+        ],
+        "Textures/lStewieAl/Sorting/hide-by-weight.dds": [
+          2432,
+          "762722f8c4ee7b0a8a7c00df5b81a1d0886ead032afecd151ce975364643c396"
+        ],
+        "Textures/lStewieAl/Sorting/hide-quest.dds": [
+          2432,
+          "6a74e12f21925566478f06f4b494e83b9affa166f3cc3084592e51ca28c1fb7d"
+        ],
+        "Textures/lStewieAl/Sorting/hide-weight-quest-sort-weight.dds": [
+          2432,
+          "fea8345af0b6734a2e8bba237d7c3ac4e9ea0fa453b5fdf6b7168189b366f98e"
+        ],
+        "Textures/lStewieAl/Sorting/hide-weight-quest.dds": [
+          2432,
+          "489bc6dce37c94ef85623790f5548af0e8a988ac6adbbefc91c470db4e06f884"
+        ],
+        "Textures/lStewieAl/Sorting/show-food.dds": [
+          2432,
+          "a267393c32a6a29306ca5b7229265d9899ef681aacfb1cb78e0992ddc73a7357"
+        ],
+        "Textures/lStewieAl/Sorting/show-hp.dds": [
+          2432,
+          "645cdb2d77d7394d19b78b6143b217589f10f0e74ed467d73630e8e973f88814"
+        ],
+        "Textures/lStewieAl/Sorting/show-rads.dds": [
+          2432,
+          "82eb1f9caeeb1b76035d2f2e4fed289ff52ef344a80c7bdb54c802a48d3fad32"
+        ],
+        "Textures/lStewieAl/Sorting/show-water.dds": [
+          2432,
+          "4c78784df7ddb878c7dd2f84dc622561c706b290dd887acab88a3f478e215926"
+        ],
+        "Textures/lStewieAl/Sorting/sort-value-per-weight.dds": [
+          2432,
+          "58b2b18df307bfb8aace2544cc761e213d39332be302a2b3345b81b798c6515c"
+        ],
+        "Textures/lStewieAl/Sorting/sort-weight.dds": [
+          2432,
+          "bbdf11cc42b755ae14a123d5e6e274d38ecc4154c3c4169adace1e379269f866"
+        ],
+        "Textures/lStewieAl/vsc.dds": [
+          384,
+          "0ed35fcd97f4e21afbca04d2e2e56cc4444fe094dcf75ecc78a9fb74b0f90a71"
+        ]
+      },
+      "acceptInstalledVersion": true
     },
     {
       "id": "stewie_ini",
@@ -345,7 +725,13 @@
       ],
       "downloadHint": "The small \"Stewie Tweaks INI\" file on the Tweaks page.",
       "note": "A stub the plugin fills in with defaults on first launch; keepExisting so re-running setup never wipes the filled-in file. Nexus requires a free account, so this is a manual download; setup finds it by name OR by size+fingerprint, so a renamed download still works.",
-      "keepExisting": true
+      "keepExisting": true,
+      "installs": {
+        "nvse/plugins/nvse_stewie_tweaks.ini": [
+          74,
+          "2ce24b71e823184c0cee5024eb86811560627ec250556391f778ad746750cd88"
+        ]
+      }
     }
   ],
   "loadOrder": [
@@ -420,5 +806,6 @@
     "file": "FalloutCustom.ini",
     "_comment": "Written verbatim to Documents\\My Games\\FalloutNV\\FalloutCustom.ini. These are the Tale of Two Wastelands settings from The Best of Times guide (Essential Mods > Custom INI) - the file NV:MP's own Hosting_TTW page says to copy. Read by JIP LN NVSE and overrides the other INIs. Without it TTW warns 'Misconfigured INI settings' and SCharGenQuest (TTW's starting quest) is unset. Verified in-game on the host 2026-09-23. Live-editable: no rebuild needed.",
     "content": "; Written by Dojo Setup - the Tale of Two Wastelands settings from The Best of Times guide\n; (thebestoftimes.moddinglinked.com, Essential Mods > Custom INI). Read by JIP LN NVSE;\n; overrides the other game INIs without editing them. TTW warns \"Misconfigured INI settings\" without it.\n\n[Audio]\nbMultiThreadAudio=1\nbUseAudioDebugInformation=0\niAudioCacheSize=16384\niMaxSizeForCachedSound=2048\n\n[BackgroundLoad]\nbSelectivePurgeUnusedOnFastTravel=1\nbBackgroundLoadLipFiles=1\n\n[Controls]\nfForegroundMouseAccelBase=0\nfForegroundMouseAccelTop=0\nfForegroundMouseBase=0\nfForegroundMouseMult=0\n\n[Display]\nbFull Screen=1\niPresentInterval=1\niTexMipMapSkip=0\nbDrawShadows=0\niActorShadowCountInt=0\niActorShadowCountExt=0\nfDefaultWorldFOV=75.0000\nfDefault1stPersonFOV=55.0000\nfPipboy1stPersonFOV=47.0\n\n[General]\nbPreemptivelyUnloadCells=1\niNumHWThreads=3\nSCharGenQuest=001FFFF8\nSIntroMovie=\n\n[Grass]\nfGrassStartFadeDistance=11200\nb30GrassVS=1\n\n[Water]\nbForceHighDetailReflections=0\n\n[BlurShaderHDR]\nbDoHighDynamicRange=1\n\n[BlurShader]\nbUseBlurShader=0\n\n[PipBoy]\nfLightEffectFadeDuration=400\n"
-  }
+  },
+  "_installsNote": "components[].installs = every file the component puts in the game (size, sha256), generated from the pinned archives. Setup uses it to skip a download when the player already has the files: in the game, or as a Mod Organizer mod (hard-linked in). .ini files only need to exist. acceptInstalledVersion lets an NVSE plugin use whatever version the player has in Mod Organizer."
 }

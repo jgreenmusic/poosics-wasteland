@@ -25,6 +25,29 @@ USER_AGENT = "DojoSetup/1.1 (+https://github.com/jgreenmusic)"
 
 ProgressFn = Callable[[int, int], None]
 
+#: Extra places to look for player-downloaded files: Mod Organizer download
+#: folders (found automatically) and any folder the player points setup at.
+#: Filled by use_search_dirs(); searched by both name and size+fingerprint.
+SEARCH_DIRS: list[Path] = []
+
+
+def use_search_dirs(extra: list[Path] | None = None) -> list[Path]:
+    """(Re)build SEARCH_DIRS: every MO2 downloads folder + the given folders."""
+    from . import mo2
+    dirs = [inst.downloads for inst in mo2.instances() if inst.downloads.is_dir()]
+    for folder in extra or []:
+        folder = Path(folder)
+        if folder.is_dir():
+            dirs.append(folder)
+            # A picked folder is often one level above the files (a mods
+            # folder with one subfolder per mod), so include its children.
+            try:
+                dirs += [Path(e.path) for e in os.scandir(folder) if e.is_dir()]
+            except OSError:
+                pass
+    SEARCH_DIRS[:] = list(dict.fromkeys(dirs))
+    return SEARCH_DIRS
+
 
 class FetchError(RuntimeError):
     pass
@@ -152,6 +175,7 @@ def find_local(filename: str, extra_dirs: list[Path] | None = None) -> list[Path
     ]
     if extra_dirs:
         search = list(extra_dirs) + search
+    search += SEARCH_DIRS
 
     seen: set[str] = set()
     for directory in search:
@@ -200,7 +224,7 @@ def resolve_manual(component: dict, cache_dir: Path,
 def find_by_size(size: int, extra_dirs: list[Path] | None = None) -> list[Path]:
     """Files of exactly `size` bytes in the usual download places (top level)."""
     home = Path(os.path.expanduser("~"))
-    dirs = list(extra_dirs or []) + [home / "Downloads", home / "Desktop", home / "Documents"]
+    dirs = list(extra_dirs or []) + [home / "Downloads", home / "Desktop", home / "Documents"] + SEARCH_DIRS
     hits: list[Path] = []
     for directory in dirs:
         try:

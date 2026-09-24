@@ -96,34 +96,25 @@ turns off the intro video (TTW's intro crashed the game under NV:MP), picks a
 **16:9 resolution** for your screen (NV:MP won't start otherwise), and turns off
 anti-aliasing. Your original settings are backed up as `.dojo-backup`.
 
-### Already have TTW installed?
+### Already have TTW installed? It's automatic
 
-If you set up TTW before (for example through Mod Organizer 2), **you don't need
-to download or rebuild it.** Setup looks for it in the usual Mod Organizer
-places, checks that it's the **same TTW version** as the host's, and links it
-into your game folder. That's instant and uses no extra space, and your Mod
-Organizer setup is left untouched. If yours is somewhere unusual, run setup with
-`--ttw-from "D:\path\to\your\TTW mod folder"`.
+If you already play TTW, especially set up with Mod Organizer 2 (the usual
+way), **you most likely don't need to download anything.** Setup finds your
+Mod Organizer by itself, then:
+
+- reuses your TTW if it's the **same version** as the host's, linking it into
+  the game folder. That's instant, uses no extra space, and leaves your Mod
+  Organizer untouched;
+- picks up YUPTTW, NVTF, JIP LN, the TTW plugin and lStewieAl's Tweaks from
+  your installed mods, or from Mod Organizer's downloads folder;
+- downloads the rest from GitHub.
+
+It only asks you for a file it truly can't find. If your Mod Organizer is
+somewhere unusual, click **Search another folder...** and pick it.
 
 If your TTW is a *different* version, setup says so and builds the matching
-one, because a different version gets you kicked from the server. You'll still
-need the YUPTTW and OGG files above, plus the Nexus ones.
-
-Then setup will:
-
-- **verify each one is the exact version this pack pins**,
-- launch the TTW installer. **Windows asks for admin permission; click Yes.**
-  The TTW installer requires it.
-- show you the exact three paths to paste in. The destination is a new empty
-  `TTW_output` folder next to your game, **not** the game's `Data` folder. Setup
-  moves the result into `Data` itself once it has checked the build.
-- **wait until you close the TTW window**, then check the build is complete and
-  identical to the host's before carrying on.
-
-The TTW installer itself has no silent mode — it's a GUI with exactly one
-command-line switch — so this step needs a human. It runs 30–90 minutes.
-Everything before and after it is automatic. If you close it early, run setup
-again. It sets the partial build aside and starts fresh.
+one, because a different version gets you kicked. Plugins are more forgiving:
+if you have a different version of NVTF, JIP LN or the others, setup uses yours.
 
 ---
 
