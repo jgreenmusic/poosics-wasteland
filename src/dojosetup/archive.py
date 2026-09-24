@@ -12,6 +12,7 @@ the folder to strip so that failure cannot happen.
 
 from __future__ import annotations
 
+import filecmp
 import os
 import shutil
 import subprocess
@@ -189,7 +190,17 @@ def _merge_tree(source: Path, dest: Path) -> None:
             target.mkdir(parents=True, exist_ok=True)
         else:
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(item, target)
+            # Identical already? Leave it - it may be loaded by a running game
+            # (xNVSE's DLLs are), and Windows refuses to overwrite those.
+            if target.is_file() and filecmp.cmp(item, target, shallow=False):
+                continue
+            try:
+                shutil.copy2(item, target)
+            except PermissionError as exc:
+                raise ExtractError(
+                    f"Could not replace {relative} - it is in use. Close "
+                    "Fallout: New Vegas and the NV:MP launcher, then run setup again."
+                ) from exc
 
 
 def verify_extracted(dest: Path, expected: list[str]) -> list[str]:
