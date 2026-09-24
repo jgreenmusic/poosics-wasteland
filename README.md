@@ -96,6 +96,16 @@ turns off the intro video (TTW's intro crashed the game under NV:MP), picks a
 **16:9 resolution** for your screen (NV:MP won't start otherwise), and turns off
 anti-aliasing. Your original settings are backed up as `.dojo-backup`.
 
+### Saves protected
+
+Setup checks that the game can actually write your saves. If Windows'
+**Controlled folder access** (ransomware protection) is on, it would silently
+block the game's saves, and NV:MP then retries forever. That's how one player
+ended up with 4,300 broken saves and constant stutter. So setup asks Windows,
+with one admin prompt (**click Yes**), to allow `FalloutNV.exe`. If your
+Documents are in **OneDrive**, it also sets `My Games` to "always keep on this
+device".
+
 ### Already have TTW installed? It's automatic
 
 If you already play TTW, especially set up with Mod Organizer 2 (the usual

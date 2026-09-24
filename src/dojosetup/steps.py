@@ -810,6 +810,94 @@ def set_ini_values(path: Path, values: dict[str, str]) -> list[str]:
     return list(missing)
 
 
+def controlled_folder_access() -> int | None:
+    """Windows' ransomware protection: 0 off, 1 on (blocking), 2 audit only.
+    None if it could not be read (no Defender, e.g. third-party antivirus)."""
+    try:
+        out = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+             "(Get-MpPreference).EnableControlledFolderAccess"],
+            capture_output=True, text=True, timeout=30,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        value = out.stdout.strip()
+        return int(value) if value.isdigit() else None
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+
+
+def protect_save_folder(ctx: Context) -> None:
+    """Make sure the GAME can write its saves.
+
+    Learned from a friend's PC with 4,300 saves: NV:MP writes a temp save and
+    then commits it; there the engine's write silently failed ("temp save
+    ... is missing - the saves folder is likely blocked"), so NV:MP retried
+    forever - endless saves and stutter. His Documents were in OneDrive. The
+    usual blocker is Controlled Folder Access, which stops unlisted programs
+    (FalloutNV.exe) writing into Documents without telling the player.
+    """
+    saves = documents_dir() / "My Games" / "FalloutNV" / "Saves"
+    my_games = documents_dir() / "My Games"
+    exe = ctx.fnv / "FalloutNV.exe"
+    ctx.log(f"  save folder: {saves}")
+    if ctx.dry_run:
+        return
+    saves.mkdir(parents=True, exist_ok=True)
+
+    # 1. Can anything write there? (If Controlled Folder Access blocks setup
+    #    itself, it certainly blocks the game.)
+    probe = saves / "dojo-write-test.tmp"
+    try:
+        probe.write_bytes(b"ok")
+        probe.unlink()
+        writable = True
+    except OSError:
+        writable = False
+        ctx.log("  ! Windows blocked writing to your save folder.")
+
+    # 2. Controlled Folder Access on? Allow the game through it (one UAC prompt).
+    cfa = controlled_folder_access()
+    if cfa == 1 or (not writable and cfa is None):
+        ctx.log("  Windows 'Controlled folder access' is on - it would silently stop the")
+        ctx.log("  game saving (the cause of a friend's 4,300 broken saves). Allowing")
+        ctx.log("  Fallout through it now. Windows will ask for permission - click Yes.")
+        quoted = str(exe).replace("'", "''")   # PowerShell single-quote escaping
+        command = f"Add-MpPreference -ControlledFolderAccessAllowedApplications '{quoted}'"
+        proc = launch_elevated(Path("powershell.exe"),
+                               ["-NoProfile", "-NonInteractive", "-Command", command],
+                               ctx.fnv)
+        while proc.running():
+            time.sleep(1)
+        ctx.log("    asked Windows to allow FalloutNV.exe")
+    elif cfa == 2:
+        ctx.log("  Controlled folder access is in audit mode (logs only) - no change needed")
+
+    # 3. OneDrive: keep My Games on this PC, never online-only. Same as
+    #    right-click > "Always keep on this device" (attrib +P = pinned).
+    onedrive = os.environ.get("OneDrive") or os.environ.get("OneDriveConsumer")
+    if onedrive and str(my_games).lower().startswith(onedrive.lower()):
+        ctx.log("  your Documents are in OneDrive - keeping My Games on this PC")
+        subprocess.run(["attrib", "+P", "-U", str(my_games), "/S", "/D"],
+                       capture_output=True, timeout=120,
+                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+
+    # Re-test after the fixes. Not when Controlled Folder Access is on: it
+    # blocks THIS setup program too (it is not on the allow list), so the
+    # probe would fail even though the game itself is now allowed.
+    if cfa == 1:
+        return
+    try:
+        probe.write_bytes(b"ok")
+        probe.unlink()
+    except OSError as exc:
+        raise StepError(
+            f"Windows still blocks writing to your save folder ({exc}).\n"
+            "  Open Windows Security > Virus & threat protection > Manage ransomware\n"
+            "  protection > Allow an app through Controlled folder access, add\n"
+            f"  {exe}, then run setup again.\n"
+            "  (If you use another antivirus, allow FalloutNV.exe in it.)"
+        )
+
+
 def configure_game(ctx: Context) -> None:
     """Apply the game settings NV:MP + TTW need, learned the hard way on the host:
 
@@ -980,6 +1068,16 @@ def verify_install(ctx: Context) -> dict:
         checks.append(("game: settings (16:9, intro video off, AA off)",
                        game_settings_ok(ctx), str(documents_dir() / "My Games" / "FalloutNV")))
 
+    if not ctx.dry_run:
+        saves = documents_dir() / "My Games" / "FalloutNV" / "Saves"
+        probe, writable = saves / "dojo-write-test.tmp", False
+        try:
+            probe.write_bytes(b"ok"); probe.unlink(); writable = True
+        except OSError:
+            pass
+        if controlled_folder_access() != 1:   # see protect_save_folder
+            checks.append(("game: save folder is writable", writable, str(saves)))
+
     checks.append(("load order: plugin timestamps in order",
                    load_order_is_stamped(ctx), str(ctx.fnv_data)))
 
@@ -1068,6 +1166,7 @@ def run_all(ctx: Context, *, include_optional: bool = False,
 
     ctx.log("[config] load order and launcher")
     write_load_order(ctx)
+    protect_save_folder(ctx)
     configure_game(ctx)
     write_launcher(ctx)
 
