@@ -416,6 +416,9 @@ class SetupWindow:
             self.emit("Desktop. Run it, choose \"Connect via IP\", and enter:")
             self.emit("")
             self.emit(f"      {server['host']}:{server['port']}")
+            self.emit("")
+            self.emit("No shortcut on your Desktop? The same file is in your game folder:")
+            self.emit(f"      {ctx.fnv / 'Join Poosics Wasteland.bat'}")
             self.queue.put(("progress", 100))
             self.queue.put(("stage", ("done", "Close")))
         else:

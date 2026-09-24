@@ -720,8 +720,10 @@ def write_load_order(ctx: Context) -> list[Path]:
     return written
 
 
-def documents_dir() -> Path:
-    """The real Documents folder - OneDrive often redirects it off ~/Documents."""
+def known_folder(a: int, b: int, c: int, d: bytes, fallback: Path) -> Path:
+    """A Windows known folder's REAL location. OneDrive commonly moves Desktop
+    and Documents (to ~/OneDrive/Desktop), so ~/Desktop can be a folder the
+    player never sees - which is how a friend ended up with no shortcut."""
     try:
         from ctypes import wintypes
 
@@ -729,9 +731,7 @@ def documents_dir() -> Path:
             _fields_ = [("a", wintypes.DWORD), ("b", wintypes.WORD),
                         ("c", wintypes.WORD), ("d", ctypes.c_ubyte * 8)]
 
-        # FOLDERID_Documents {FDD39AD0-238F-46AF-ADB4-6C85480369C7}
-        fid = GUID(0xFDD39AD0, 0x238F, 0x46AF,
-                   (ctypes.c_ubyte * 8)(0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7))
+        fid = GUID(a, b, c, (ctypes.c_ubyte * 8)(*d))
         out = ctypes.c_wchar_p()
         if ctypes.windll.shell32.SHGetKnownFolderPath(ctypes.byref(fid), 0, None,
                                                       ctypes.byref(out)) == 0:
@@ -740,7 +740,21 @@ def documents_dir() -> Path:
             return path
     except (AttributeError, OSError):
         pass
-    return Path.home() / "Documents"
+    return fallback
+
+
+def documents_dir() -> Path:
+    # FOLDERID_Documents {FDD39AD0-238F-46AF-ADB4-6C85480369C7}
+    return known_folder(0xFDD39AD0, 0x238F, 0x46AF,
+                        bytes([0xAD, 0xB4, 0x6C, 0x85, 0x48, 0x03, 0x69, 0xC7]),
+                        Path.home() / "Documents")
+
+
+def desktop_dir() -> Path:
+    # FOLDERID_Desktop {B4BFCC3A-DB2C-424C-B029-7FE99A87C641}
+    return known_folder(0xB4BFCC3A, 0xDB2C, 0x424C,
+                        bytes([0xB0, 0x29, 0x7F, 0xE9, 0x9A, 0x87, 0xC6, 0x41]),
+                        Path.home() / "Desktop")
 
 
 def primary_screen_size() -> tuple[int, int] | None:
@@ -914,14 +928,14 @@ def write_launcher(ctx: Context) -> Path:
 
     # A .lnk needs COM; a .url-style .bat copy on the Desktop is dependency-free
     # and survives the exe being frozen.
-    desktop = Path.home() / "Desktop"
-    if desktop.is_dir():
-        try:
-            shutil.copy2(launcher, desktop / launcher.name)
-            ctx.log(f"    shortcut placed on your Desktop: {launcher.name}")
-        except OSError as exc:
-            ctx.log(f"    could not write the Desktop shortcut ({exc}); "
-                    f"launch from {launcher} instead")
+    desktop = desktop_dir()
+    try:
+        desktop.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(launcher, desktop / launcher.name)
+        ctx.log(f"    shortcut placed on your Desktop: {desktop / launcher.name}")
+    except OSError as exc:
+        ctx.log(f"    could not put the shortcut on your Desktop ({exc}).")
+        ctx.log(f"    Launch it from here instead: {launcher}")
     return launcher
 
 
