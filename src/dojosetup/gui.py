@@ -48,8 +48,11 @@ class SetupWindow:
 
         root.title(f"{pack['name']} - Setup")
         root.configure(bg=BG)
-        root.geometry("820x620")
-        root.minsize(720, 560)
+        # Fit the screen: a fixed 620 px was taller than a scaled laptop screen,
+        # which pushed the buttons off the bottom ("I don't see Install").
+        height = min(620, root.winfo_screenheight() - 90)
+        root.geometry(f"820x{max(height, 420)}")
+        root.minsize(640, 400)
 
         header = tk.Frame(root, bg=BG)
         header.pack(fill="x", padx=24, pady=(20, 8))
@@ -73,7 +76,8 @@ class SetupWindow:
             font=("Segoe UI", 9, "bold"), bd=1, relief="solid",
             labelanchor="nw", padx=2, pady=2,
         )
-        log_frame.pack(fill="both", expand=True, padx=24, pady=(4, 8))
+        # packed LAST (below), so the buttons and progress bar keep their space
+        # and only the log shrinks when the window is short.
 
         self.text = tk.Text(log_frame, bg="#131316", fg=FG, bd=0,
                             font=("Consolas", 9), wrap="word",
@@ -84,10 +88,11 @@ class SetupWindow:
         self.text.pack(side="left", fill="both", expand=True)
 
         self.bar = ttk.Progressbar(root, mode="determinate", maximum=100)
-        self.bar.pack(fill="x", padx=24, pady=(0, 6))
 
         buttons = tk.Frame(root, bg=BG)
-        buttons.pack(fill="x", padx=24, pady=(0, 18))
+        buttons.pack(side="bottom", fill="x", padx=24, pady=(0, 18))
+        self.bar.pack(side="bottom", fill="x", padx=24, pady=(0, 6))
+        log_frame.pack(fill="both", expand=True, padx=24, pady=(4, 8))
 
         self.action = tk.Button(
             buttons, text="Check my PC", command=self.on_action,
@@ -119,6 +124,9 @@ class SetupWindow:
                   bg=BG, fg=DIM, activebackground=BG, activeforeground=FG,
                   bd=0, padx=4, pady=9, font=("Segoe UI", 9),
                   cursor="hand2").pack(side="left")
+
+        # Enter presses the main button, whatever it currently says.
+        root.bind("<Return>", lambda _event: self.on_action())
 
         self.stage = "check"
         self.root.after(100, self.drain)
