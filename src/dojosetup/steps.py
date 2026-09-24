@@ -794,20 +794,64 @@ def pick_resolution(screen: tuple[int, int] | None) -> tuple[int, int]:
     return 1920, 1080
 
 
+#: Section each managed setting belongs in, used when a player's INI lacks it.
+INI_SECTIONS = {
+    "sintromovie": "General",
+    "slocalsavepath": "General",
+    "imultisample": "Display",
+    "isize w": "Display",
+    "isize h": "Display",
+}
+
+
+def read_ini(path: Path) -> dict[str, str]:
+    """key (lower-case) -> value, first occurrence. Bethesda INI keys are
+    case-insensitive: guides and tools write SIntroMovie where the game's
+    defaults say sIntroMovie, and both mean the same setting."""
+    values: dict[str, str] = {}
+    for line in path.read_bytes().decode("latin-1").splitlines():
+        if "=" in line and not line.lstrip().startswith((";", "#", "[")):
+            key, value = line.split("=", 1)
+            values.setdefault(key.strip().lower(), value.split(";", 1)[0].strip())
+    return values
+
+
 def set_ini_values(path: Path, values: dict[str, str]) -> list[str]:
-    """Set `key=value` lines in a Bethesda INI in place, keeping its line
-    endings and encoding. Returns the keys that were not found."""
+    """Set `key=value` in a Bethesda INI in place, keeping line endings and
+    encoding. Keys match case-insensitively (a player's INI may say
+    SIntroMovie). A key the file lacks is added to its section (INI_SECTIONS),
+    creating the section if needed. Returns keys that could not be placed."""
     raw = path.read_bytes().decode("latin-1")
+    newline = "\r\n" if "\r\n" in raw else "\n"
     lines = raw.splitlines(keepends=True)
-    missing = dict(values)
+    wanted = {k.lower(): (k, v) for k, v in values.items()}
+    found: set[str] = set()
     for i, line in enumerate(lines):
         body = line.rstrip("\r\n")
-        key = body.split("=", 1)[0].strip() if "=" in body else None
-        if key in missing:
-            ending = line[len(body):]
-            lines[i] = f"{key}={missing.pop(key)}{ending}"
+        if "=" not in body or body.lstrip().startswith((";", "#", "[")):
+            continue
+        key = body.split("=", 1)[0].strip()
+        if key.lower() in wanted:
+            lines[i] = f"{key}={wanted[key.lower()][1]}{line[len(body):] or newline}"
+            found.add(key.lower())
+    unplaced: list[str] = []
+    for low, (key, value) in wanted.items():
+        if low in found:
+            continue
+        section = INI_SECTIONS.get(low)
+        if not section:
+            unplaced.append(key)
+            continue
+        header = f"[{section}]".lower()
+        at = next((i for i, l in enumerate(lines) if l.strip().lower() == header), None)
+        if at is None:
+            if lines and not lines[-1].endswith(("\n", "\r")):
+                lines[-1] += newline
+            lines += [f"[{section}]{newline}", f"{key}={value}{newline}"]
+        else:
+            lines.insert(at + 1, f"{key}={value}{newline}")
     path.write_bytes("".join(lines).encode("latin-1"))
-    return list(missing)
+    return unplaced
 
 
 def controlled_folder_access() -> int | None:
@@ -954,36 +998,43 @@ def configure_game(ctx: Context) -> None:
             ctx.log(f"    note: {path.name} had no {', '.join(missing)} line; left as is")
 
 
-def game_settings_ok(ctx: Context) -> bool:
-    """True if the INIs carry what configure_game sets."""
+def game_settings_problems(ctx: Context) -> list[str]:
+    """What is wrong with the game settings configure_game sets ([] = all good).
+    Names the exact setting, so a player's log says what is off."""
     folder = documents_dir() / "My Games" / "FalloutNV"
+    problems: list[str] = []
     settings = ctx.manifest.get("gameSettings") or {}
     for name, values in settings.items():
         if name.startswith("_") or not isinstance(values, dict):
             continue  # "_comment" and other notes, not INI files
         path = folder / name
         if not path.is_file():
-            return False
-        lines = {l.split("=", 1)[0].strip(): l.split("=", 1)[1].strip()
-                 for l in path.read_bytes().decode("latin-1").splitlines() if "=" in l}
-        if any(lines.get(k) != v for k, v in values.items()):
-            return False
+            problems.append(f"{name} is missing")
+            continue
+        current = read_ini(path)
+        for key, value in values.items():
+            if current.get(key.lower()) != value:
+                problems.append(f"{name}: {key} is {current.get(key.lower())!r}, should be {value!r}")
     custom = ctx.manifest.get("customIni")
     if custom:
         path = folder / custom.get("file", "FalloutCustom.ini")
         body = custom["content"].replace("\r\n", "\n").replace("\n", "\r\n")
         if not (path.is_file() and path.read_bytes() == body.encode("ascii")):
-            return False
+            problems.append(f"{path.name} is missing or differs from the pack's")
     prefs = folder / "FalloutPrefs.ini"
     if prefs.is_file():
-        lines = {l.split("=", 1)[0].strip(): l.split("=", 1)[1].strip()
-                 for l in prefs.read_bytes().decode("latin-1").splitlines() if "=" in l}
+        current = read_ini(prefs)
         try:
-            if int(lines.get("iSize W", 0)) * 9 != int(lines.get("iSize H", 0)) * 16:
-                return False
+            w, h = int(current.get("isize w", 0)), int(current.get("isize h", 0))
+            if not w or w * 9 != h * 16:
+                problems.append(f"FalloutPrefs.ini: resolution {w}x{h} is not 16:9")
         except ValueError:
-            return False
-    return True
+            problems.append("FalloutPrefs.ini: resolution is not a number")
+    return problems
+
+
+def game_settings_ok(ctx: Context) -> bool:
+    return not game_settings_problems(ctx)
 
 
 def write_launcher(ctx: Context) -> Path:
@@ -1065,8 +1116,10 @@ def verify_install(ctx: Context) -> dict:
     if not ctx.dry_run:
         checks.append(("game: FalloutNV.exe is 4GB-patched",
                        is_large_address_aware(ctx.fnv / "FalloutNV.exe"), str(ctx.fnv)))
-        checks.append(("game: settings (16:9, intro video off, AA off)",
-                       game_settings_ok(ctx), str(documents_dir() / "My Games" / "FalloutNV")))
+        problems = game_settings_problems(ctx)
+        checks.append(("game: settings (16:9, intro video off, AA off)"
+                       + (f" - {'; '.join(problems)}" if problems else ""),
+                       not problems, str(documents_dir() / "My Games" / "FalloutNV")))
 
     if not ctx.dry_run:
         saves = documents_dir() / "My Games" / "FalloutNV" / "Saves"
