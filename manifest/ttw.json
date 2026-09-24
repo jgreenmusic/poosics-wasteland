@@ -4,7 +4,7 @@
   "_comment": "SINGLE SOURCE OF TRUTH for the friend-facing TTW client package. Every version and hash here was verified against the host's own staged files on 2026-09-15. Do not bump a version without re-hashing: NV:MP kicks any player whose ESM/ESP set does not match the host byte-for-byte, so version drift between host and friend is a hard failure, not a cosmetic one.",
   "pack": {
     "name": "Poosic's Wasteland",
-    "version": "1.5.3",
+    "version": "1.6.1",
     "generated": "2026-09-23",
     "packNote": "Tale of Two Wastelands 3.4 + YUPTTW + NV:MP co-op client."
   },
@@ -795,17 +795,19 @@
   "gameSettings": {
     "_comment": "Applied to Documents\\My Games\\FalloutNV by setup. Each fixed or guards against a crash seen on the host 2026-09-23. sIntroMovie is set in BOTH files: FalloutPrefs.ini also carries it and overrides Fallout.ini. Resolution is not listed: setup picks a 16:9 size for the player's own screen.",
     "Fallout.ini": {
-      "sIntroMovie": ""
+      "sIntroMovie": "",
+      "SLocalSavePath": "Saves\\"
     },
     "FalloutPrefs.ini": {
       "iMultiSample": "0",
-      "sIntroMovie": ""
+      "sIntroMovie": "",
+      "SLocalSavePath": "Saves\\"
     }
   },
   "customIni": {
     "file": "FalloutCustom.ini",
     "_comment": "Written verbatim to Documents\\My Games\\FalloutNV\\FalloutCustom.ini. These are the Tale of Two Wastelands settings from The Best of Times guide (Essential Mods > Custom INI) - the file NV:MP's own Hosting_TTW page says to copy. Read by JIP LN NVSE and overrides the other INIs. Without it TTW warns 'Misconfigured INI settings' and SCharGenQuest (TTW's starting quest) is unset. Verified in-game on the host 2026-09-23. Live-editable: no rebuild needed.",
-    "content": "; Written by Dojo Setup - the Tale of Two Wastelands settings from The Best of Times guide\n; (thebestoftimes.moddinglinked.com, Essential Mods > Custom INI). Read by JIP LN NVSE;\n; overrides the other game INIs without editing them. TTW warns \"Misconfigured INI settings\" without it.\n\n[Audio]\nbMultiThreadAudio=1\nbUseAudioDebugInformation=0\niAudioCacheSize=16384\niMaxSizeForCachedSound=2048\n\n[BackgroundLoad]\nbSelectivePurgeUnusedOnFastTravel=1\nbBackgroundLoadLipFiles=1\n\n[Controls]\nfForegroundMouseAccelBase=0\nfForegroundMouseAccelTop=0\nfForegroundMouseBase=0\nfForegroundMouseMult=0\n\n[Display]\nbFull Screen=1\niPresentInterval=1\niTexMipMapSkip=0\nbDrawShadows=0\niActorShadowCountInt=0\niActorShadowCountExt=0\nfDefaultWorldFOV=75.0000\nfDefault1stPersonFOV=55.0000\nfPipboy1stPersonFOV=47.0\n\n[General]\nbPreemptivelyUnloadCells=1\niNumHWThreads=3\nSCharGenQuest=001FFFF8\nSIntroMovie=\n\n[Grass]\nfGrassStartFadeDistance=11200\nb30GrassVS=1\n\n[Water]\nbForceHighDetailReflections=0\n\n[BlurShaderHDR]\nbDoHighDynamicRange=1\n\n[BlurShader]\nbUseBlurShader=0\n\n[PipBoy]\nfLightEffectFadeDuration=400\n\n[GamePlay]\n; Autosaves off (added 2026-09-23): each TTW save is several MB and hitched the game at every door,\n; which a co-op player felt as constant stutter. Save manually - F5 quicksaves.\nbSaveOnInteriorExteriorSwitch=0\nbSaveOnTravel=0\nbSaveOnWait=0\nbSaveOnRest=0\n"
+    "content": "; Written by Dojo Setup - the Tale of Two Wastelands settings from The Best of Times guide\n; (thebestoftimes.moddinglinked.com, Essential Mods > Custom INI). Read by JIP LN NVSE;\n; overrides the other game INIs without editing them. TTW warns \"Misconfigured INI settings\" without it.\n\n[Audio]\nbMultiThreadAudio=1\nbUseAudioDebugInformation=0\niAudioCacheSize=16384\niMaxSizeForCachedSound=2048\n\n[BackgroundLoad]\nbSelectivePurgeUnusedOnFastTravel=1\nbBackgroundLoadLipFiles=1\n\n[Controls]\nfForegroundMouseAccelBase=0\nfForegroundMouseAccelTop=0\nfForegroundMouseBase=0\nfForegroundMouseMult=0\n\n[Display]\nbFull Screen=1\niPresentInterval=1\niTexMipMapSkip=0\nbDrawShadows=0\niActorShadowCountInt=0\niActorShadowCountExt=0\nfDefaultWorldFOV=75.0000\nfDefault1stPersonFOV=55.0000\nfPipboy1stPersonFOV=47.0\n\n[General]\n; Force the normal save folder. Mod Organizer can redirect saves (e.g. to __MO_Saves\\), a folder that only\n; exists inside Mod Organizer; outside it the game's save write fails and NV:MP retries forever.\nSLocalSavePath=Saves\\\nbPreemptivelyUnloadCells=1\niNumHWThreads=3\nSCharGenQuest=001FFFF8\nSIntroMovie=\n\n[Grass]\nfGrassStartFadeDistance=11200\nb30GrassVS=1\n\n[Water]\nbForceHighDetailReflections=0\n\n[BlurShaderHDR]\nbDoHighDynamicRange=1\n\n[BlurShader]\nbUseBlurShader=0\n\n[PipBoy]\nfLightEffectFadeDuration=400\n\n[GamePlay]\n; Autosaves off (added 2026-09-23): each TTW save is several MB and hitched the game at every door,\n; which a co-op player felt as constant stutter. Save manually - F5 quicksaves.\nbSaveOnInteriorExteriorSwitch=0\nbSaveOnTravel=0\nbSaveOnWait=0\nbSaveOnRest=0\n"
   },
   "_installsNote": "components[].installs = every file the component puts in the game (size, sha256), generated from the pinned archives. Setup uses it to skip a download when the player already has the files: in the game, or as a Mod Organizer mod (hard-linked in). .ini files only need to exist. acceptInstalledVersion lets an NVSE plugin use whatever version the player has in Mod Organizer."
 }
